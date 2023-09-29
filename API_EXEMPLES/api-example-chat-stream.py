@@ -1,11 +1,15 @@
+import asyncio
+import html
 import json
+import sys
+
 try:
     import websockets
 except ImportError:
     print("Websockets package not found. Make sure it's installed.")
 
 # For local streaming, the websockets are hosted without ssl - ws://
-HOST = '127.0.0.1:5005'
+HOST = 'localhost:5005'
 URI = f'ws://{HOST}/api/v1/chat-stream'
 
 # For reverse-proxied streaming, the remote will likely host with ssl - wss://
@@ -13,25 +17,32 @@ URI = f'ws://{HOST}/api/v1/chat-stream'
 
 
 async def run(user_input, history):
-    history = "internal"
     # Note: the selected defaults change from time to time.
     request = {
         'user_input': user_input,
-        'max_new_tokens': 2048,
+        'max_new_tokens': 250,
+        'auto_max_new_tokens': False,
+        'max_tokens_second': 0,
         'history': history,
-        'mode': 'chat-instruct',  # Valid options: 'chat', 'chat-instruct', 'instruct'
-        'character': 'Hannah',
-        'instruction_template': 'Vicuna-v1.1',
-        'your_name': 'Link',
+        'mode': 'instruct',  # Valid options: 'chat', 'chat-instruct', 'instruct'
+        'character': 'Example',
+        'instruction_template': 'Vicuna-v1.1',  # Will get autodetected if unset
+        'your_name': 'You',
+        # 'name1': 'name of user', # Optional
+        # 'name2': 'name of character', # Optional
+        # 'context': 'character context', # Optional
+        # 'greeting': 'greeting', # Optional
+        # 'name1_instruct': 'You', # Optional
+        # 'name2_instruct': 'Assistant', # Optional
+        # 'context_instruct': 'context_instruct', # Optional
+        # 'turn_template': 'turn_template', # Optional
         'regenerate': False,
         '_continue': False,
-        'stop_at_newline': False,
-        'chat_prompt_size': 2048,
-        'chat_generation_attempts': 1,
-        'chat-instruct_command': 'You are a helpful and polite robot assistant. Your primary goal is to assist the user with various tasks and provide information. Be sure to maintain a positive and upbeat tone throughout the conversation. If the user asks for help with a task, provide clear and concise instructions or assistance. If they ask questions, answer them to the best of your knowledge, Remember to use phrases like "<|character|>" "How may I assist you today?" or "<|character|>" "Im here to help with anything you need." Be sure to adapt your responses to the users requests and maintain a friendly and cooperative demeanor at all times. Feel free to ask if you need further guidance or examples for specific interactions..\n\n<|prompt|>',
+        'chat_instruct_command': 'Continue the chat dialogue below. Write a single reply for the character "<|character|>".\n\n<|prompt|>',
+
         # Generation params. If 'preset' is set to different than 'None', the values
         # in presets/preset-name.yaml are used instead of the individual numbers.
-        'preset': 'None',  
+        'preset': 'None',
         'do_sample': True,
         'temperature': 0.7,
         'top_p': 0.1,
@@ -41,6 +52,7 @@ async def run(user_input, history):
         'tfs': 1,
         'top_a': 0,
         'repetition_penalty': 1.18,
+        'repetition_penalty_range': 0,
         'top_k': 40,
         'min_length': 0,
         'no_repeat_ngram_size': 0,
@@ -51,6 +63,9 @@ async def run(user_input, history):
         'mirostat_mode': 0,
         'mirostat_tau': 5,
         'mirostat_eta': 0.1,
+        'guidance_scale': 1,
+        'negative_prompt': '',
+
         'seed': -1,
         'add_bos_token': True,
         'truncation_length': 2048,
@@ -71,3 +86,25 @@ async def run(user_input, history):
                     yield incoming_data['history']
                 case 'stream_end':
                     return
+
+
+async def print_response_stream(user_input, history):
+    cur_len = 0
+    async for new_history in run(user_input, history):
+        cur_message = new_history['visible'][-1][1][cur_len:]
+        cur_len += len(cur_message)
+        print(html.unescape(cur_message), end='')
+        sys.stdout.flush()  # If we don't flush, we won't see tokens in realtime.
+
+
+if __name__ == '__main__':
+    user_input = "Please give me a step-by-step guide on how to plant a tree in my backyard."
+
+    # Basic example
+    history = {'internal': [], 'visible': []}
+
+    # "Continue" example. Make sure to set '_continue' to True above
+    # arr = [user_input, 'Surely, here is']
+    # history = {'internal': [arr], 'visible': [arr]}
+
+    asyncio.run(print_response_stream(user_input, history))
