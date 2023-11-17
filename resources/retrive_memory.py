@@ -10,7 +10,6 @@ from sklearn.feature_extraction.text import CountVectorizer
 # Load pre-trained Word2Vec model
 w2v_model = Word2Vec.load('path/to/your/word2vec/model')
 
-kkkk
 def preprocess_text(text):
     text = text.lower()
     text = re.sub(r'[^\w\s]', '', text)

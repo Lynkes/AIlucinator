@@ -7,8 +7,12 @@ import speech_recognition as sr
 import pyttsx3
 import subprocess
 import threading
+import openai
 from resources import connect
 from resources import livechat
+from colorama import *
+import re
+from concurrent.futures import ThreadPoolExecutor
 mode = 0
 r = sr.Recognizer()
 r.dynamic_energy_threshold = False
@@ -20,57 +24,43 @@ engine = pyttsx3.init()
 voices = engine.getProperty('voices')
 engine.setProperty('voice', voices[1].id) # 0 for male, 1 for female
 
+def LOAD_ENV():
+    # If user didn't rename example.env
+    if os.path.exists("example.env") and not os.path.exists(".env"):
+        os.rename("example.env", ".env")
+        print(Style.BRIGHT + Fore.RED +"Renamed example.env to .env")
+    else:
+        print(Fore.LIGHTGREEN_EX+"***AI Starting***")
+        print("Loading .env")
 
-script_path = os.path.dirname(__file__)
-index_url = os.environ.get('INDEX_URL', "")
-python = sys.executable
-skip_install = False
+    # Load settings from .env file
+    with open('.env') as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            key, value = line.split('=', 1)
+            os.environ[key] = value
 
-def run(command, desc=None, errdesc=None, custom_env=None, live=False):
-    if desc is not None:
-        print(desc)
-
-    if live:
-        result = subprocess.run(command, shell=True, env=os.environ if custom_env is None else custom_env)
-        if result.returncode != 0:
-            raise RuntimeError(f"""{errdesc or 'Error running command'}.
-Command: {command}
-Error code: {result.returncode}""")
-
-        return ""
-
-    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, env=os.environ if custom_env is None else custom_env)
-
-    if result.returncode != 0:
-
-        message = f"""{errdesc or 'Error running command'}.
-Command: {command}
-Error code: {result.returncode}
-stdout: {result.stdout.decode(encoding="utf8", errors="ignore") if len(result.stdout)>0 else '<empty>'}
-stderr: {result.stderr.decode(encoding="utf8", errors="ignore") if len(result.stderr)>0 else '<empty>'}
-"""
-        raise RuntimeError(message)
-
-    return result.stdout.decode(encoding="utf8", errors="ignore")
-
-
-def run_pip(args, desc=None):
-    if skip_install:
-        return
-
-    index_url_line = f' --index-url {index_url}' if index_url != '' else ''
-    return run(f'"{python}" -m pip {args} --prefer-binary{index_url_line}', desc=f"Installing {desc}", errdesc=f"Couldn't install {desc}")
-
-
-def prepare_environment():
-    global skip_install
-    requirements_file = os.environ.get('REQS_FILE', "requirements.txt")
-    print(f"Python {sys.version}")
-    
-    if not os.path.isfile(requirements_file):
-        requirements_file = os.path.join(script_path, requirements_file)
-    run_pip(f"install -r \"{requirements_file}\"", "requirements for Python-APP Virtual environment")
-#######################################################################################################################################################################################
+def Check():
+    if os.environ.get('DEVICE'):
+        print(Fore.RED + 'DEVICE IN USE FOR Faster-Whisper=', os.environ['DEVICE'])
+        if os.environ['FASTWHISPER']:
+            from faster_whisper import WhisperModel
+            model_size = os.environ['MODEL_SIZE']
+            model_device = "cuda" if os.environ['DEVICE'] == "cuda" else "cpu"
+            model_compute_type = "float16" if os.environ['DEVICE'] == "cuda" else "int8"
+            model = WhisperModel(model_size, device=model_device, compute_type=model_compute_type)
+    # Check virtual env
+    if os.environ.get('VIRTUAL_ENV'):
+        # The VIRTUAL_ENV environment variable is set
+        print(Style.BRIGHT+Fore.GREEN+'You are in a virtual environment:', os.environ['VIRTUAL_ENV'])
+    elif sys.base_prefix != sys.prefix:
+        # sys.base_prefix and sys.prefix are different
+        print(Style.BRIGHT+Fore.BLUE+'You are in a virtual environment:', sys.prefix)
+    else:
+        # Not in a virtual environment
+        print(Style.BRIGHT + Fore.RED + 'You are not in a virtual environment, we\'ll continue anyways')
 
 async def print_response_stream(user_input, history):
     cur_len = 0
@@ -82,53 +72,54 @@ async def print_response_stream(user_input, history):
         final_message = final_message + cur_message
         print(cur_message, end='')
         sys.stdout.flush()  # If we don't flush, we won't see tokens in realtime.
-    #SEND OUTPUT TO TTS
-    return generate_voice(final_message)
-
+    final_message = re.sub(r'\*.*?\*', '', final_message) # Remove Texto de acões entre(*exemplo*)
+    engine.say(f"{final_message}")
+    engine.runAndWait()
+    #return generate_voice(final_message)
 
 def generate_voice(response):
             engine.say(f"{response}")
             engine.runAndWait()
 
-
-def chat(updatein='', useEL=False, usewhisper=False):
+def chat(updatein, fastwhisper, device):
     history = {'internal': [], 'visible': []}
     try:
-       # You can change the mode to 1 if you want to record audio from your microphone
-       # or change the mode to 2 if you want to capture livechat from youtube
-       mode = input("Mode (1-Mic, 2-Youtube Live, 3-Twitch Live, 4-TEST): ")
+       mode = input("Mode ("+Fore.BLUE+"1-Mic, "+Fore.RED+"2-Youtube Live, "+Fore.MAGENTA+"3-Twitch Live, "+Fore.YELLOW+"4-Console Chat): "+Fore.WHITE+"5-Android Socket):")
        if mode == "1":
            while True:
-            audio = listen_for_voice(timeout=None)
+            audio = listen_for_voice_OLD(timeout=None)
             try:
-                if usewhisper:
+                if fastwhisper:
+                    from faster_whisper import WhisperModel
+                    model_size = "large-v2"
+                    model_device = "cuda" if device == "cuda" else "cpu"
+                    model_compute_type = "float16" if device == "cuda" else "int8"
+                    model = WhisperModel(model_size, device=model_device, compute_type=model_compute_type)
                     if audio:
-                        user_input = whisper(audio)
-                        print("You said: ", user_input) # Checking
+                        user_input, language, language_probability = fasterwhisper(audio, model,)
+                        print(Style.BRIGHT + Fore.YELLOW + "You said: "+ Fore.WHITE, user_input) # Checking
                     else:
-                        raise ValueError("Empty audio input")
+                        raise ValueError(Style.BRIGHT + Fore.RED + "Empty audio input")
                 else:    
                     user_input = r.recognize_google(audio)
-                
             except Exception as e:
-                print(e)
+                print("Exception:",e)
                 continue
-            if "open chrome" in user_input.lower() or "open chrome." in user_input.lower():
-                subprocess.Popen('C:\Program Files\Google\Chrome\Application\chrome.exe')
-            if "open notepad" in user_input.lower() or "open notepad." in user_input.lower():
-                subprocess.Popen('notepad.exe')
-            if "quit" in user_input.lower() or "quit." in user_input.lower():
-                raise SystemExit
+            if "quit" in user_input.lower():
+                break
             if updatein != '':
                 if "update chat" in user_input.lower():
                         update = updatein
                         with open (update, "r") as file:
                             update = file.read()
             try:
-                asyncio.run(print_response_stream(user_input, history))
+                if "en" in language or "pt" in language and language_probability >= 0.4:
+                    print(Fore.WHITE)
+                    asyncio.run(print_response_stream(user_input, history))
+                else:
+                    print(Style.BRIGHT + Fore.RED +"False input?")
             except:
-                print("Token limit exceeded, clearing messsages list and restarting")
-
+                print(Style.BRIGHT + Fore.RED +"Token limit exceeded, clearing messsages list and restarting")
        elif mode == "2":
         live_id = input("Livestream ID: ")
         # Threading is used to capture livechat and answer the chat at the same time
@@ -141,70 +132,83 @@ def chat(updatein='', useEL=False, usewhisper=False):
            t = threading.Thread(target=livechat.preparation)
            t.start()
            livechat.twitch()
-       elif mode == "4":
-             user_input="me fale as coisas que voce mais gosta."
-             asyncio.run(print_response_stream(user_input, history))
+       elif mode == "4":    
+           with ThreadPoolExecutor(max_workers=5) as executor:
+            while True:
+                user_input = input("\nChat:")
+                future = executor.submit(asyncio.run, print_response_stream(user_input, history))
+       elif mode == "5":
+           import socket    
+           with ThreadPoolExecutor(max_workers=3) as executor:
+            try:
+                server_ip = '0.0.0.0'  # Ou o IP da sua máquina na LAN
+                server_port = 9596
+                server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                server_socket.bind((server_ip, server_port))
+                server_socket.listen(1)
+                print(f"Servidor ouvindo em {server_ip}:{server_port}")
+                conn, addr = server_socket.accept()
+                print(f"Conexão de {addr}")
+                with open('audio_received.wav', 'wb') as audio_file:
+                    audio = conn.recv(1024)
+                    while audio:
+                        audio_file.write(audio)
+                        audio = conn.recv(1024)
+                conn.close()
+                server_socket.close()
+                if fastwhisper:
+                    from faster_whisper import WhisperModel
+                    model_size = "large-v2"
+                    model_device = "cuda" if device == "cuda" else "cpu"
+                    model_compute_type = "float16" if device == "cuda" else "int8"
+                    model = WhisperModel(model_size, device=model_device, compute_type=model_compute_type)
+                    if audio:
+                        user_input, language, language_probability = fasterwhisper(audio, model,)
+                        print(Style.BRIGHT + Fore.YELLOW + "You said: "+ Fore.WHITE, user_input) # Checking
+                    else:
+                        raise ValueError(Style.BRIGHT + Fore.RED + "Empty audio input")
+                else:    
+                    user_input = r.recognize_google(audio)
+            except:
+                print(Style.BRIGHT + Fore.RED +"Coonection Closed?")
     except KeyboardInterrupt:
         t.join()
         print("Stopped")
-
-def whisper(self, audio):
-    '''
-    Uses the Whisper API to generate audio for the response text. 
-    Args:
-        audio (AudioData) : AudioData instance used in Speech Recognition, needs to be written to a
-                            file before uploading to openAI.
-    Returns:
-        response (str): text transcription of what Whisper deciphered
-    '''
-    r.recognize_google(audio) # raise exception for bad/silent audio
+        
+def fasterwhisper(audio, model):
+    response = ""
     with open('speech.wav','wb') as f:
         f.write(audio.get_wav_data())
     speech = open('speech.wav', 'rb')
-    model_id = "whisper-1"
-    #completion = openai.Audio.transcribe(model=model_id, file=speech)
-    #response = completion['text']
-    #return response
+    segments, info= model.transcribe(speech, vad_filter=True, beam_size=5)
+    print("Detected language '%s' with probability %f" % (info.language, info.language_probability))
+    for segment in segments:
+        response = response + segment.text
+    return response, info.language, info.language_probability
 
-
-# Takes user voice input from microphone and returns the audio.
-# If there's no audio, it will return an empty array
-def listen_for_voice(timeout:int|None):
+def listen_for_voice_OLD(timeout:int|None=5):
     with mic as source:
-            print("\n Listening...")
-            r.adjust_for_ambient_noise(source, duration=0.5)
+            print(Style.BRIGHT + Fore.GREEN+"\n>Listening...")
+            r.adjust_for_ambient_noise(source, duration=0.2)
             try:
                 audio = r.listen(source, timeout)
             except:
                 return []
     return audio
 
-
-
-###TEST###
-################################################################################
-def listen_for_voice_NEW(timeout: int = None):
-
-    def audio_listener():
-        with mic as source:
-            print("\n>Listening...")
-            r.adjust_for_ambient_noise(source, duration=0.5)
-            try:
-                audio = r.listen(source, timeout=timeout)
-            except sr.WaitTimeoutError:
-                print(">Timeout reached. Stopping listening.")
-                audio = None
-    audio = None
-    audio_thread = threading.Thread(target=audio_listener)
-    try:
-        audio_thread.start()
-        audio_thread.join(timeout)  # Wait for the thread to finish or timeout
-    except KeyboardInterrupt:
-        pass  # Handle user interruption if needed
-    return audio
-#################################################################################
+def audio_listener(timeout):
+    with mic as source:
+        print(Fore.CYAN + "\n>Listening...")
+        r.adjust_for_ambient_noise(source, duration=0.5)
+        try:
+            audio = r.listen(source, timeout=timeout)
+        except sr.WaitTimeoutError:
+            print(">Timeout reached. Stopping listening.")
+            audio = None
+        return audio
 
 if __name__ == "__main__":
-    prepare_environment()
-    print("***AI Starting***")
-    chat()
+    LOAD_ENV()
+    Check()
+    while True:
+        chat(updatein='', fastwhisper=os.environ['FASTWHISPER'], device= os.environ['DEVICE'])
