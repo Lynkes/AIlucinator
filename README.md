@@ -10,6 +10,7 @@ https://github.com/oobabooga/text-generation-webui
 
 ## Setting Up the Environment 
 To set up your environment, you will just need python-3.10> on Windowns, to generate a environment just run the launch.bat and it shoud work.
-DLLs for FasterWisper
+
+## DLLs for FasterWisper
 https://mega.nz/file/b9tmUQDT#AJj6rTJf7d3BjlQAY8KF1siC_Vc1hcgtyAiLnfJmiQY 
 
