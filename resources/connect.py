@@ -12,11 +12,11 @@ URI = f'ws://{HOST}/api/v1/chat-stream'
 # URI = 'wss://your-uri-here.trycloudflare.com/api/v1/stream'
 
 
-async def run(user_input, history):
+async def run(user_input):
     request = {
         'user_input': user_input,
         'max_new_tokens': 2048,
-        'history': history,
+        #'history': history,
         'mode': os.environ['MODE'],  # Valid options: 'chat', 'chat-instruct', 'instruct'
         'character': os.environ['CHARACTER'],
         'instruction_template': os.environ['INSTRUCTION_TEMPLATE'],

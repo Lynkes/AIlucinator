@@ -51,16 +51,15 @@ if EXIST %ACCELERATE% goto :accelerate_launch
 
 rem CHANGE TO ANY ASSISTANT PRESET
 :launch
-%PYTHON% resources\env.py %*
 %PYTHON% launch.py %*
-
+%PYTHON% main.py %*
 pause
 exit /b
 
 :accelerate_launch
 echo Accelerating
-%PYTHON% resources\env.py %*
 %ACCELERATE% launch --num_cpu_threads_per_process=6 launch.py
+%ACCELERATE% launch --num_cpu_threads_per_process=6 main.py
 pause
 exit /b
 
