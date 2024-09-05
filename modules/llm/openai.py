@@ -1,16 +1,18 @@
 from modules.llm.llm_base import LLMBase
+from dotenv import load_dotenv
 import openai
 import os
 
 class OpenAILLM(LLMBase):
-    def __init__(self, model="gpt-4"):
+    def __init__(self):
+        load_dotenv()
         # Set your OpenAI API key from the environment variable or directly
         self.api_key = os.getenv("OPENAI_API_KEY")
+        self.model = os.getenv("LLMMODEL")
         if not self.api_key:
             raise ValueError("OpenAI API key not found. Please set the 'OPENAI_API_KEY' environment variable.")
         
         openai.api_key = self.api_key
-        self.model = model
 
     def generate(self, prompt):
         # Generate a response from the OpenAI API

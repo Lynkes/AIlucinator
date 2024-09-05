@@ -3,6 +3,7 @@ import time
 from colorama import *
 from queue import Queue, Empty
 import logging
+import keyboard 
 from modules.kokoro import Kokoro
 from modules.stream.LIVE_youtube_api import YoutubeAPI
 from modules.utils.conversation_utils import beep, async_play_audio
@@ -65,7 +66,7 @@ class Queues:
             self.stt_recognition,
             self.tts_generation, 
             self.handle_personal_input,
-            #self.handle_personal_audio,
+            self.handle_personal_audio,
             #self.PrintResponse,
             ]:
             t = threading.Thread(target=self.thread_wrapper, args=(func,))
@@ -81,18 +82,18 @@ class Queues:
             except Exception as e:
                 logging.error(f"Error in {func.__name__}: {e}")
 
-    def handle_personal_audio(self, timeout=5):
+    def handle_personal_audio(self, timeout=None):
         while not self.end_received.is_set():
             try:
-                beep()
-                start_time = time.time()
-                audio = self.kokoro.listen_for_voice()
-                if audio:
-                    logging.info("Audio detected")
-                    self.stt_recognition_queue.put(audio)
-                else:
-                    if time.time() - start_time > timeout:
-                        logging.warning("Audio detection timeout")
+                if keyboard.is_pressed('ctrl+space'):  # Check if space key is pressed
+                    beep()
+                    audio = self.kokoro.listen_for_voice()
+                    if audio:
+                        logging.info("Audio detected")
+                        self.stt_recognition_queue.put(audio)
+                    else:
+                            logging.warning("Audio detection timeout")
+                time.sleep(0.1)  # Avoid busy-waiting
             except Exception as e:
                 logging.error(f"Error in handle_personal_audio: {e}")
 
@@ -118,7 +119,7 @@ class Queues:
     def retrieve_comments(self):
         while not self.end_received.is_set():
             try:
-                msg = self.youtube.msg_queue.get(timeout=1)
+                msg = self.youtube.msg_queue.get(timeout=5)
                 logging.info("YouTube queue message received")
                 complete_message = f"{msg.author.name} said: {msg.message}"
                 self.gpt_generation_queue.put(complete_message)
@@ -130,7 +131,7 @@ class Queues:
     def stt_recognition(self):
         while not self.end_received.is_set():
             try:
-                audio = self.stt_recognition_queue.get(timeout=1)
+                audio = self.stt_recognition_queue.get(timeout=5)
                 logging.info("STT queue message received")
                 stt = self.kokoro.speech_recognition(audio)
                 logging.info(f"STT result: {stt}")

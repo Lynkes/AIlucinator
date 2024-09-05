@@ -49,6 +49,9 @@ class Kokoro:
 
     def listen_for_voice(self):
         return self.stt_provider.listen_for_voice()
+    
+    def speech_recognition(self, audio):
+        return self.stt_provider.recognize_speech(audio)
 
     ############################
     def memory_sise(self, prompt):

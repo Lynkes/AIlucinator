@@ -1,9 +1,14 @@
 from modules.stt.stt_base import STTBase
 from faster_whisper import WhisperModel
+import speech_recognition as sr
 import io
 
 class WhisperSTT(STTBase):
     def __init__(self, model_size_or_path="large-v2", device="cuda", compute_type="float16"):
+        self.r = sr.Recognizer()
+        self.r.dynamic_energy_threshold = False
+        self.r.energy_threshold = 150  # 300 is the default value of the SR library
+        self.mic = sr.Microphone(device_index=0)
         self.model = WhisperModel(model_size_or_path=model_size_or_path, device=device, compute_type=compute_type, download_root="whisper-model")
 
     def recognize_speech(self, audio):
@@ -14,3 +19,17 @@ class WhisperSTT(STTBase):
         for segment in segments:
             response += segment.text
         return response, info.language, info.language_probability
+
+    def listen_for_voice(self, timeout: int | None = 5):
+        with self.mic as source:
+            print("\nListening...")
+            self.r.adjust_for_ambient_noise(source, duration=0.5)
+            try:
+                audio = self.r.listen(source, timeout)
+                print("No longer listening")
+                return audio
+            except sr.WaitTimeoutError:
+                print("Listening timed out")
+            except Exception as e:
+                print(f"An error occurred while listening: {e}")
+            return None
