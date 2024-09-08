@@ -1,5 +1,6 @@
 from modules.stt.stt_base import STTBase
 from faster_whisper import WhisperModel
+from colorama import *
 import speech_recognition as sr
 import io
 
@@ -18,15 +19,18 @@ class WhisperSTT(STTBase):
         print(f"Detected language '{info.language}' with probability {info.language_probability}")
         for segment in segments:
             response += segment.text
+        if "en" in info.language or "pt" in info.language and info.language_probability >= 0.75:
+            print(Style.BRIGHT + Fore.YELLOW + "\nYou said: " + Fore.WHITE, response)  # Checking
+            return response
+        else:
+            print(Style.BRIGHT + Fore.RED + "\nFalse input?")
         return response, info.language, info.language_probability
 
     def listen_for_voice(self, timeout: int | None = 5):
         with self.mic as source:
-            print("\nListening...")
             self.r.adjust_for_ambient_noise(source, duration=0.5)
             try:
                 audio = self.r.listen(source, timeout)
-                print("No longer listening")
                 return audio
             except sr.WaitTimeoutError:
                 print("Listening timed out")

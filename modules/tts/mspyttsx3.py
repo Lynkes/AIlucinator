@@ -18,6 +18,6 @@ class Pyttsx3TTS(TTSBase):
         engine.runAndWait()
 
 
-    def generate_speech(self, text):
+    def generate_speech(self, text, temp_filename=None):
         self.engine = self.Startpyttsx3()
         self.rep(self.engine, text)

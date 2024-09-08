@@ -11,16 +11,17 @@ class PiperTTS(TTSBase):
         self.piper_exe_path = piper_exe_path
         self.model_path = model_path
 
-    def generate_speech(self, text, save=True):
-        output_file = 'temp_output.wav'
-        self._generate_speech_from_text(text, output_file)
+    def generate_speech(self, text, temp_filename, save=False):
+        output_file = temp_filename
+        self._generate_speech_from_text(text, temp_filename, output_file)
         if save:
             self.save_tts(output_file)
-        self.play_audio(output_file)
+        return output_file
+        #self.play_audio(output_file)
     
-    def _generate_speech_from_text(self, text, output_file):
+    def _generate_speech_from_text(self, text, temp_filename, output_file):
         # Create a temporary text file to hold the text
-        temp_text_file = 'temp_text.txt'
+        temp_text_file = temp_filename+'.txt'
         with open(temp_text_file, 'w') as f:
             f.write(text)
 
@@ -47,16 +48,22 @@ class PiperTTS(TTSBase):
         # Clean up temporary text file
         os.remove(temp_text_file)
 
-    def play_audio(self, audio_file):
-        # Play audio using wave and ffplay
-        try:
-            with wave.open(audio_file, 'rb') as wf:
-                print(f"Playing audio: {audio_file}")
-                os.system(f'ffplay -nodisp -autoexit {audio_file}')
-        except Exception as e:
-            print(f"Failed to play audio: {e}")
-        finally:
-            os.remove(audio_file)  # Clean up the temp file
+    # def play_audio(self, audio_file):
+    #     # Play audio using ffplay with suppressed output
+    #     try:
+    #         print(f"Playing audio: {audio_file}")
+            
+    #         # Build the ffplay command
+    #         command = ['ffplay', '-nodisp', '-autoexit', audio_file]
+            
+    #         # Suppress output by redirecting stdout and stderr to os.devnull
+    #         with open(os.devnull, 'w') as devnull:
+    #             subprocess.run(command, stdout=devnull, stderr=devnull)
+    #     except Exception as e:
+    #         print(f"Failed to play audio: {e}")
+    #     finally:
+    #         os.remove(audio_file)  # Clean up the temp file
+
 
     def save_tts(self, audio_file):
         # Save TTS output to a predefined directory
@@ -64,9 +71,13 @@ class PiperTTS(TTSBase):
         output_dir = assets_root / "voices"
         output_dir.mkdir(parents=True, exist_ok=True)  # Create the directory if it doesn't exist
         output_file = output_dir / self.generate_unique_filename(output_dir)
-        
+
         try:
-            sf.copy(audio_file, output_file)  # Copy the audio file to the output directory
+            # Read audio data and samplerate from the existing WAV file
+            data, samplerate = sf.read(audio_file)
+
+            # Write the audio data to the new file
+            sf.write(output_file, data, samplerate)  # Save the audio file with the correct samplerate
             print(f"Audio saved as {output_file}")
         except Exception as e:
             print(f"Failed to save audio: {e}")

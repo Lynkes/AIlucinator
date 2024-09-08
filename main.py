@@ -30,10 +30,11 @@ if __name__ == "__main__":
     MODEL_SIZE = os.environ['MODEL_SIZE']
     MODEL_DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
     MODEL_COMPUTE_TYPE = "float16" if MODEL_DEVICE == "cuda" else "int8"
-
+    CHARACTER = PERSONALITY
     #DATABASE VARIABLES
     
     EMBEDDING_SERVICE = os.environ['EMBEDDING_SERVICE']
+    DEBUG = os.environ['DEBUG']
     
     SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
     PERSONALITY = SCRIPT_DIR+'/'+'conversations/'+PERSONALITY
@@ -63,6 +64,9 @@ if __name__ == "__main__":
         youtube, 
         personality=PERSONALITY, 
         your_name=YOUR_NAME, 
+        character=CHARACTER,
+        debug=DEBUG,
     )
 
     GLaDOS.run()
+    

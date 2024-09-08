@@ -17,11 +17,9 @@ class GoogleSTT(STTBase):
 
     def listen_for_voice(self, timeout: int | None = 5):
         with self.mic as source:
-            print("\nListening...")
             self.r.adjust_for_ambient_noise(source, duration=0.5)
             try:
                 audio = self.r.listen(source, timeout)
-                print("No longer listening")
                 return audio
             except sr.WaitTimeoutError:
                 print("Listening timed out")

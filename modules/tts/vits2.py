@@ -49,7 +49,8 @@ class Vits2TTS(TTSBase):
             text="a"
         )
 
-    def generate_speech(self, text, save=True):
+    def generate_speech(self, text, temp_filename=None, save=True):
+        ############################################################FIX to play in thread later temp_filename like in pipertts
         # Generate speech
         sr, audio = self.model.infer(
             language=Languages.EN,

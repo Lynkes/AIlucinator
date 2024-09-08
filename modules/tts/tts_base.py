@@ -16,5 +16,5 @@ class TTSBase:
         else:
             raise ValueError(f"Unknown TTS provider: {provider_name}")
 
-    def generate_speech(self, text):
-        return self.provider.generate_speech(text)
+    def generate_speech(self, text, temp_filename):
+        return self.provider.generate_speech(text, temp_filename)

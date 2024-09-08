@@ -20,10 +20,11 @@ class Kokoro:
                  compute_type="float16"
                  ):
         self.save_folderpath = save_folderpath
+        self.model = LLMMODEL
         self.llm_provider = LLMBase.get_llm_provider(llm)
         self.tts_provider = TTSBase.get_tts_provider(tts)
-        self.stt_provider = STTBase.get_stt_provider(stt)
-        self.model = LLMMODEL
+        self.stt_provider = STTBase.get_stt_provider(stt, model_size, model_device, compute_type)
+
         # Initialize the database
         self.db = initialize_db(self.save_folderpath)
         # Load filters
@@ -35,7 +36,7 @@ class Kokoro:
         save_inprogress(self.messages, self.save_folderpath)
 
     def query_rag(self, template, userprompt):
-        results = self.db.similarity_search_with_score(userprompt, k=3)
+        results = self.db.similarity_search_with_score(userprompt, k=2)
         memoryDB = "\n\n---\n\n".join([doc.page_content for doc, _score in results])
         template = ChatPromptTemplate.from_template(template)
         prompt = template.format(memoryDB=memoryDB, messages=self.messages,  userprompt=userprompt)
@@ -43,12 +44,12 @@ class Kokoro:
         response = self.llm_provider.generate(prompt, self.model)
         return response
 
-    def generate_voice(self, sentence):
-        self.tts_provider.generate_speech(sentence)
+    def generate_voice(self, sentence, temp_filename):
+        self.tts_provider.generate_speech(sentence, temp_filename)
+        return temp_filename
 
-
-    def listen_for_voice(self):
-        return self.stt_provider.listen_for_voice()
+    def listen_for_voice(self, timeout):
+        return self.stt_provider.listen_for_voice(timeout)
     
     def speech_recognition(self, audio):
         return self.stt_provider.recognize_speech(audio)
@@ -58,11 +59,11 @@ class Kokoro:
         print("MEMORY SISE")
         encoding = tiktoken.encoding_for_model("gpt-4")
         print("MEMORY SISE2")
-        total_tokens = sum(len(encoding.encode(self.messages)) + len(encoding.encode(prompt)))
+        total_tokens = len(encoding.encode(prompt))
         print("MEMORY SISE3")
         if total_tokens >= 7500:
             self.save_conversation()
-            update_db(self.save_folderpath)
+            self.db= initialize_db(self.save_folderpath)
             print(Style.BRIGHT + Fore.YELLOW, f'\nTotal number of tokens: {total_tokens} of 8000. Resetting.')
 
     def filter(self, response):

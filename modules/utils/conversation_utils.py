@@ -1,9 +1,5 @@
 import json
 import os
-import winsound
-import sounddevice as sd
-import soundfile as sf
-import yaml
 import re
 import subprocess
 #PATHS i need
@@ -15,23 +11,10 @@ Allucinator-Refactor\conversations\GLaDOS\GLaDOS.txt
 Allucinator-Refactor\conversations\GLaDOS\filtered_words.txt
 Allucinator-Refactor\conversations\GLaDOS\keyword_map.json
 '''
-    
 
 def check_quit(user_input:str):
     if user_input.lower() == "quit" or "quit." in user_input.lower():
         raise SystemExit
-
-def beep():
-    try:
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        beep_path = os.path.join(script_dir, "resources", "beep.mp3")
-        data, samplerate = sf.read(beep_path)
-        sd.play(data, samplerate)
-    except:
-        # If `soundfile` fails, play a system beep instead
-        duration = 500
-        frequency = 500
-        winsound.Beep(frequency, duration)
 
 # Moved over to yaml, but if json format is needed, replace .yaml with
 # .json and use json.dump(messages, file, indent=4, ensure_ascii=False)
@@ -130,7 +113,7 @@ def filter_paragraph(paragraph, filtered_words=None, keyword_map=None) -> list:
         # Split sentence by conjunctions and commas for natural pauses
         sentence_parts = sentence.split(', ')  # Split by commas
         for part in sentence_parts:
-            if len(current_sentence + part) <= 150:  # Example length limit for a natural sentence
+            if len(current_sentence + part) <= len(paragraph)/2:  # Example length limit for a natural sentence
                 current_sentence += part + ', '
             else:
                 if current_sentence.strip():  # Check if the current sentence is not just spaces
@@ -148,23 +131,7 @@ def read_paragraph_from_file(file_path) -> str:
         paragraph = file.read()
     return paragraph
 
-def play_audio(audio_path):
-    try:
-        data, samplerate = sf.read(audio_path)
-        sd.play(data, samplerate)
-        sd.wait()
-    except:
-        return "FIN"
-    # os.remove(audio_path)
 
-def async_play_audio(audio_path):
-    data, sample_rate = sf.read(audio_path)
-    channels = data.shape[1] if len(data.shape) > 1 else 1
-    data = data.astype('float32')  # Convert the data to float32
-    with sd.OutputStream(samplerate=sample_rate, channels=channels) as stream:
-        stream.write(data)
-
-    # os.remove(audio_path)
 
 def get_path(name):
     current_dir = os.path.dirname(os.path.abspath(__file__))
