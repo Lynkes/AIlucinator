@@ -2,13 +2,15 @@ import subprocess, os, winsound
 import sounddevice as sd
 import soundfile as sf
 
+
 def play_audio(audio_file):
+    ffplay = 'python-embedded/ffplay.exe'
     # Play audio using ffplay with suppressed output
     try:
         print(f"Playing audio: {audio_file}")
         
         # Build the ffplay command
-        command = ['ffplay', '-nodisp', '-autoexit', audio_file]
+        command = [ffplay, '-nodisp', '-autoexit', audio_file]
         
         # Suppress output by redirecting stdout and stderr to os.devnull
         with open(os.devnull, 'w') as devnull:

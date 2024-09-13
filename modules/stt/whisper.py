@@ -10,7 +10,7 @@ class WhisperSTT(STTBase):
         self.r.dynamic_energy_threshold = False
         self.r.energy_threshold = 150  # 300 is the default value of the SR library
         self.mic = sr.Microphone(device_index=0)
-        self.model = WhisperModel(model_size_or_path=model_size_or_path, device=device, compute_type=compute_type, download_root="whisper-model")
+        self.model = WhisperModel(model_size_or_path=model_size_or_path, device=device, compute_type=compute_type, download_root="python-embedded\whisper-model")
 
     def recognize_speech(self, audio):
         response = ""
@@ -19,7 +19,7 @@ class WhisperSTT(STTBase):
         print(f"Detected language '{info.language}' with probability {info.language_probability}")
         for segment in segments:
             response += segment.text
-        if "en" in info.language or "pt" in info.language and info.language_probability >= 0.75:
+        if "en" in info.language or "pt" in info.language and info.language_probability >= 0.6:
             print(Style.BRIGHT + Fore.YELLOW + "\nYou said: " + Fore.WHITE, response)  # Checking
             return response
         else:

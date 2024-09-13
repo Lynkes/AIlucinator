@@ -86,7 +86,7 @@ class Queues:
             self.stt_recognition,
             self.tts_generation, 
             self.handle_personal_input,
-            self.handle_personal_audio,
+            #self.handle_personal_audio,
             self.PrintResponse,
             self.read_audio,
         ]:
@@ -118,20 +118,24 @@ class Queues:
         """Lida com o input de áudio do usuário quando a tecla 'espaço' é pressionada."""
         while not self.end_received.is_set():
             try:
-                # Verifica se a tecla 'espaço' está pressionada
-                while keyboard.is_pressed('space'):
-                    beep()  # Reproduz um som de feedback
+                # Check for the key press event here
+                if keyboard.is_pressed('space'):  # Example of checking a key press
                     self._log_info("Listening for voice input...")
-                    audio = self.kokoro.listen_for_voice(timeout)  # Escuta o input de voz
+                    audio = self.kokoro.listen_for_voice(timeout)  # Calls the listen_for_voice method
+                    
                     if audio:
                         self._log_info("Audio detected")
-                        self.stt_recognition_queue.put(audio)  # Coloca o áudio na fila para processamento
+                        self.stt_recognition_queue.put(audio)  # Puts the audio in the queue for further processing
                     else:
                         logging.warning("No audio detected or timeout occurred")
-                    time.sleep(0.3)  # Pequeno atraso para evitar alto uso de CPU
+                    
+                    time.sleep(0.3)  # Small delay to prevent high CPU usage
+
+                time.sleep(0.1)  # Additional delay to prevent high CPU usage and check again
+
             except Exception as e:
                 logging.error(f"Error in handle_personal_audio: {e}")
-            time.sleep(0.3)  # Atraso adicional para evitar alto uso de CPU
+
 
     def handle_personal_input(self):
         """Lida com o input textual do usuário e comandos especiais ('save', 'exit')."""
@@ -187,8 +191,8 @@ class Queues:
                 self._log_info("LLM queue received")
                 userprompt = self.gpt_generation_queue.get()
                 response = self.kokoro.query_rag(template=self.prompt, userprompt=userprompt)
-                self.kokoro.messages.append({'role': 'user', 'content': userprompt})
-                self.kokoro.messages.append({'role': 'assistant', 'content': response})
+                self.kokoro.messages.append({'role': self.your_name, 'content': userprompt})
+                self.kokoro.messages.append({'role': self.character, 'content': response})
                 self.separate_sentence_queue.put(response)
 
     def separate_sentence(self):

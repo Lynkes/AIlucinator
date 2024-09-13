@@ -11,7 +11,7 @@ class PiperTTS(TTSBase):
         self.piper_exe_path = piper_exe_path
         self.model_path = model_path
 
-    def generate_speech(self, text, temp_filename, save=False):
+    def generate_speech(self, text, temp_filename, save=True):
         output_file = temp_filename
         self._generate_speech_from_text(text, temp_filename, output_file)
         if save:
@@ -47,23 +47,6 @@ class PiperTTS(TTSBase):
 
         # Clean up temporary text file
         os.remove(temp_text_file)
-
-    # def play_audio(self, audio_file):
-    #     # Play audio using ffplay with suppressed output
-    #     try:
-    #         print(f"Playing audio: {audio_file}")
-            
-    #         # Build the ffplay command
-    #         command = ['ffplay', '-nodisp', '-autoexit', audio_file]
-            
-    #         # Suppress output by redirecting stdout and stderr to os.devnull
-    #         with open(os.devnull, 'w') as devnull:
-    #             subprocess.run(command, stdout=devnull, stderr=devnull)
-    #     except Exception as e:
-    #         print(f"Failed to play audio: {e}")
-    #     finally:
-    #         os.remove(audio_file)  # Clean up the temp file
-
 
     def save_tts(self, audio_file):
         # Save TTS output to a predefined directory

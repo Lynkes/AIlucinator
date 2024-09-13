@@ -53,7 +53,7 @@ goto :launch
 if exist "%PY_EMBEDDED%\get-pip.py" (
     goto :install_requirements
 )
-%PYTHON% main.py %*
+%PYTHON% glados-ui.py %*
 if exist tmp rmdir /s /q tmp
 pause
 exit /b
