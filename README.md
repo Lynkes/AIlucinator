@@ -53,17 +53,49 @@ O sistema é composto pelos seguintes componentes principais:
    ```
 
 4. **Crie um arquivo `.env` com as variáveis de ambiente necessárias:**
+Aqui está o template `.env`:
 
-   ```env
-   PERSONALITY=nome_da_personalidade
-   LLMMODEL=modelo_llm
-   LLM=provedor_llm
-   STT=provedor_stt
-   TTS=provedor_tts
-   MODEL_SIZE=tamanho_do_modelo
-   EMBEDDING_SERVICE=serviço_de_embeddings
-   DEBUG=modo_de_debug
-   ```
+```env
+# Configuração da API do OpenAI
+OPENAI_API_KEY=  # Coloque sua chave da API OpenAI aqui, se aplicável
+
+# Provedor de Modelos de Linguagem (LLM)
+LLM=ollama  # Escolha entre ollama, openai
+
+# Provedor de Reconhecimento de Fala (STT)
+STT=whisper  # Escolha entre whisper, google, voice_recognition
+
+# Provedor de Síntese de Fala (TTS)
+TTS=pipertts  # Escolha entre mspyttsx3, vits2, pipertts
+
+# Modelo de LLM
+LLMMODEL=llava-llama3  # Escolha entre llama3.1, gpt-3.5-turbo, llava-llama3
+
+# Tamanho do Modelo
+MODEL_SIZE=large-v2  # Escolha entre large-v2, large-v1, medium, medium.en, small, small.en, base, base.en, tiny, tiny.en, distil-large-v3
+
+# Serviço de Embeddings
+EMBEDDING_SERVICE=ollama  # Escolha entre huggingface, ollama, openai
+
+# Nome da Personalidade do Chatbot
+PERSONALITY=GLaDOS  # Nome da personalidade do chatbot
+
+# Nome do Usuário (opcional)
+YOUR_NAME=  # Coloque seu nome ou o nome do usuário, se necessário
+
+# Configuração do Modo Debug
+DEBUG=False  # Defina como True para ativar o modo debug
+
+# Caminhos para Arquivos de Conversa, Modelos de Voz e Dados
+# Esses são apenas comentários para referência e não são variáveis de ambiente reais
+# conversations/GLaDOS/GLaDOS.txt
+# conversations/GLaDOS/chroma
+# conversations/GLaDOS/model/Portal_GLaDOS_v1/Models_Style-Bert_VITS2_Portal_GLaDOS_v1_config.json
+# conversations/GLaDOS/model/Portal_GLaDOS_v1/Portal_GLaDOS_v1_e782_s50000.safetensors
+# conversations/GLaDOS/model/Portal_GLaDOS_v1/style_vectors.npy
+```
+
+Essa estrutura de `.env` inclui variáveis para configuração de provedores e modelos, bem como opções adicionais para personalização do chatbot e configuração do modo de depuração. As seções comentadas fornecem informações sobre os caminhos dos arquivos de configuração e modelos que o projeto pode utilizar. Certifique-se de preencher as chaves e variáveis conforme necessário para a sua configuração específica.
 
 ## Estrutura do Projeto
 
