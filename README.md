@@ -1,6 +1,6 @@
 # Projeto de Chatbot AI com Integração de Modelos e Filas
 
-Este projeto implementa um chatbot AI avançado que combina processamento de linguagem natural (NLP), reconhecimento de fala (STT), síntese de fala (TTS), gerenciamento de filas, e integração com APIs externas para fornecer uma experiência interativa e personalizada.
+Este projeto implementa um chatbot AI avançado que combina processamento de linguagem natural (NLP), reconhecimento de fala (STT), síntese de fala (TTS), gerenciamento de filas e integração com APIs externas. Além disso, utiliza um banco de dados vetorial para aplicar a técnica de Recuperação-Aumentada por Geração (RAG) em modelos de linguagem (LLMs), proporcionando uma experiência interativa e personalizada.
 
 ## Sumário
 
@@ -16,9 +16,10 @@ Este projeto implementa um chatbot AI avançado que combina processamento de lin
 
 O sistema é composto pelos seguintes componentes principais:
 
-- **`Kokoro`**: Classe para processamento de linguagem natural, reconhecimento de fala e síntese de fala.
+- **`Kokoro`**: Classe para processamento de linguagem natural, reconhecimento de fala (STT) e síntese de fala (TTS).
 - **`Queues`**: Gerencia a execução do chatbot, coordenando a interação com a personalidade definida e as filas de mensagens.
-- **Configuração e Variáveis de Ambiente**: Gerencia as variáveis essenciais para a operação do sistema.
+- **Banco de Dados Vetorial**: Utiliza a técnica de Recuperação-Aumentada por Geração (RAG) para melhorar as respostas dos modelos de linguagem, armazenando e recuperando informações relevantes para contextos conversacionais.
+- **Configuração e Variáveis de Ambiente**: Gerencia variáveis essenciais para a operação do sistema e configura a modularidade para diferentes provedores de recursos.
 
 ## Requisitos
 
@@ -26,6 +27,7 @@ O sistema é composto pelos seguintes componentes principais:
 - Bibliotecas Python:
   - `torch`
   - `python-dotenv`
+  - `chroma` (para gerenciamento do banco de dados vetorial)
   - Outros requisitos específicos estão listados no `requirements.txt`.
 
 ## Configuração do Ambiente
@@ -60,7 +62,7 @@ O sistema é composto pelos seguintes componentes principais:
    TTS=provedor_tts
    MODEL_SIZE=tamanho_do_modelo
    EMBEDDING_SERVICE=serviço_de_embeddings
-   DEBUG=modo_de_debbug
+   DEBUG=modo_de_debug
    ```
 
 ## Estrutura do Projeto
@@ -70,7 +72,7 @@ Allucinator/
 ├── main.py               # Ponto de entrada principal do programa
 ├── conversations/
 │   ├── GLaDOS/
-│   │   ├── chroma/       # Banco de dados persistente para conversas
+│   │   ├── chroma/       # Banco de dados persistente para conversas (RAG)
 │   │   ├── filtered_words.txt  # Lista de palavras filtradas
 │   │   ├── keyword_map.json    # Mapeamento de palavras-chave
 │   ├── GLaDOS.txt        # Template de prompt para a personalidade GLaDOS
@@ -120,6 +122,10 @@ Implementa a classe `Queues`, que coordena a execução do chatbot, integrando c
 
 Função para verificar se as variáveis de ambiente estão configuradas corretamente.
 
+### Banco de Dados Vetorial
+
+- **Chroma**: Utilizado para armazenar e recuperar embeddings de conversas, melhorando a precisão das respostas dos LLMs através da técnica RAG.
+
 ## Como Executar
 
 1. **Certifique-se de que o ambiente está configurado corretamente e as dependências estão instaladas.**
@@ -141,4 +147,4 @@ Contribuições são bem-vindas! Para colaborar, por favor, abra um issue ou env
 Este projeto está licenciado sob a [MIT License](LICENSE).
 ```
 
-Esse README.md agora oferece uma visão detalhada e clara do projeto, suas dependências, estrutura e instruções de execução. Se precisar de mais detalhes ou ajustes, avise-me!
+Essa versão do README.md agora inclui informações sobre o banco de dados vetorial e o uso da técnica RAG, além de destacar a modularidade do projeto para integração com diferentes provedores de recursos. Se precisar de mais ajustes ou adicionar outras informações, é só me avisar!
