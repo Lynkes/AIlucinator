@@ -200,6 +200,3 @@ Contribuições são bem-vindas! Para colaborar, por favor, abra um issue ou env
 ## Licença
 
 Este projeto está licenciado sob a [MIT License](LICENSE).
-```
-
-Essa atualização inclui uma seção detalhada para o `GLaDOS.txt`, explicando cada variável e sua função no contexto do prompt. Se precisar de mais alguma modificação ou adição, é só me avisar!
