@@ -88,11 +88,17 @@ DEBUG=False  # Defina como True para ativar o modo debug
 
 # Caminhos para Arquivos de Conversa, Modelos de Voz e Dados
 # Esses são apenas comentários para referência e não são variáveis de ambiente reais
-# conversations/GLaDOS/GLaDOS.txt
-# conversations/GLaDOS/chroma
-# conversations/GLaDOS/model/Portal_GLaDOS_v1/Models_Style-Bert_VITS2_Portal_GLaDOS_v1_config.json
-# conversations/GLaDOS/model/Portal_GLaDOS_v1/Portal_GLaDOS_v1_e782_s50000.safetensors
-# conversations/GLaDOS/model/Portal_GLaDOS_v1/style_vectors.npy
+#conversations\GLaDOS\GLaDOS.txt
+#conversations\GLaDOS\*.json Arquivos json serão carregados para o banco de dados como se fossem o historico de mensagem quando o limite de 8000 tokens é estourado ou se a conversa é salva e o codigo parado
+#conversations\GLaDOS\PDF\*.PDF Todos PDFs nessa pasta tambem serão carregados ao banco de dados como se fossem memoria,
+#conversations\GLaDOS\chroma
+#conversations\GLaDOS\model\voices
+#conversations\GLaDOS\model\Models_Style-Bert_VITS2_Portal_GLaDOS_v1_config.json
+#conversations\GLaDOS\model\Portal_GLaDOS_v1_e782_s50000.safetensors
+#conversations\GLaDOS\model\style_vectors.npy
+#conversations\GLaDOS\pipermodel\glados.onnx
+#conversations\GLaDOS\pipermodel\glados.onnx.json
+#conversations\GLaDOS\pipermodel\silero_vad.onnx
 ```
 
 Essa estrutura de `.env` inclui variáveis para configuração de provedores e modelos, bem como opções adicionais para personalização do chatbot e configuração do modo de depuração. As seções comentadas fornecem informações sobre os caminhos dos arquivos de configuração e modelos que o projeto pode utilizar. Certifique-se de preencher as chaves e variáveis conforme necessário para a sua configuração específica.
