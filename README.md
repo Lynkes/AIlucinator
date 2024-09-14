@@ -35,8 +35,8 @@ O sistema é composto pelos seguintes componentes principais:
 1. **Clone o repositório:**
 
    ```bash
-   git clone https://github.com/usuario/projeto-ai.git
-   cd projeto-ai
+   git clone [https://github.com/usuario/projeto-ai.git](https://github.com/Lynkes/AIlucinator.git)
+   cd AIlucinator
    ```
 
 2. **Crie e ative um ambiente virtual (opcional, mas recomendado):**
@@ -50,6 +50,7 @@ O sistema é composto pelos seguintes componentes principais:
 
    ```bash
    pip install -r requirements.txt
+   pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
    ```
 
 4. **Crie um arquivo `.env` com as variáveis de ambiente necessárias:**
