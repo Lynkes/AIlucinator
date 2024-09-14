@@ -35,7 +35,7 @@ O sistema é composto pelos seguintes componentes principais:
 1. **Clone o repositório:**
 
    ```bash
-   git clone [https://github.com/usuario/projeto-ai.git](https://github.com/Lynkes/AIlucinator.git)
+   git clone https://github.com/Lynkes/AIlucinator.git
    cd AIlucinator
    ```
 
