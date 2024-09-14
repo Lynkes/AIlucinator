@@ -1,6 +1,3 @@
-Aqui está uma versão aprimorada do seu README.md, com uma estrutura mais detalhada e uma descrição mais clara de cada componente:
-
-```markdown
 # Projeto de Chatbot AI com Integração de Modelos e Filas
 
 Este projeto implementa um chatbot AI avançado que combina processamento de linguagem natural (NLP), reconhecimento de fala (STT), síntese de fala (TTS), gerenciamento de filas, e integração com APIs externas para fornecer uma experiência interativa e personalizada.
