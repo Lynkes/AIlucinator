@@ -1,7 +1,4 @@
-Claro! Aqui está o README.md atualizado com a seção sobre o template `GLaDOS.txt`, incluindo a explicação das variáveis dentro do prompt:
-
-```markdown
-# Projeto de Chatbot AI com Integração de Modelos e Filas
+# Projeto "AIlucinator" de um Chatbot AI com Integração de Modelos, Filas e memoria
 
 Este projeto implementa um chatbot AI avançado que combina processamento de linguagem natural (NLP), reconhecimento de fala (STT), síntese de fala (TTS), gerenciamento de filas, e integração com APIs externas para fornecer uma experiência interativa e personalizada.
 
