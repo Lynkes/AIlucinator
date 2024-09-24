@@ -1,0 +1,483 @@
+
+\documentclass[10pt, conference, compsocconf]{IEEEtran}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazilian]{babel}
+\usepackage{graphicx,url}
+\usepackage{placeins}
+\usepackage{csquotes}
+\usepackage{amsmath}
+\usepackage{xcolor}
+%\Elaborado por Fabrício Tonetto Londero
+\usepackage{listings}
+
+%\usepackage[fixlanguage]{babelbib}
+%\selectbiblanguage{brazil}
+
+%\usepackage[backend=biber]{biblatex}
+\usepackage[ natbib=true, style=numeric,sorting=none]{biblatex} %ordem de ocorrencia da referencia
+
+\addbibresource{references.bib}
+
+\hyphenation{op-tical net-works semi-conduc-tor}
+
+\begin{document}
+
+\title{Protótipo de Interação Humano-Computador\\ para Processamento da Língua Natural em LLMs}
+
+\author{\IEEEauthorblockN{Pedro Guilherme Gabriel Maurer, Alexandre de Oliveira Zamberlan}
+\IEEEauthorblockA{Curso de Ciência da Computação\\
+UFN - Universidade Franciscana\\
+Santa Maria - RS\\
+p.maurer@ufn.edu.br, 
+alexz@ufn.edu.br}
+}
+
+\maketitle
+
+\begin{abstract}
+
+% This work investigates the development of a human-computer interaction prototype that processes natural language efficiently and accurately without relying on an internet connection. By utilizing a Large Language Model (LLM) and integrating Speech-to-Text (STT) and Text-to-Speech (TTS) functionalities, the goal is to ensure user data privacy and security while aiming for stable performance across various scenarios. The study covers the fundamentals of Natural Language Processing (NLP), practices in human-computer interaction, and recent advancements in language models such as Transformers as well as techniques for their usage and applications. The methodology of design and development is detailed, including the choice of specific tools and technologies. The results and implications of the prototype are discussed, along with potential areas for future research.
+
+Este trabalho aborda o desenvolvimento de um protótipo de interação humano-computador que processa linguagem natural buscando níveis de  eficiência e de precisão,%((Mirkus)utilizando a biblioteca faster-wisper para transformação de voz em texto com algumas condicionais para garantir que não haja mal interpretação da voz)
+sem depender de uma conexão com a Internet.
+ %(Requesitos de hardware dependem do tamanho do modelo de llm ultilizado, o modelo ultilizado até então necessita de cerca de 8gb de Vram para seu uso eficiente).
+Utilizando um Modelo de Linguagem Ampla (LLM) e integrando funcionalidades de Reconhecimento de Fala (STT) e Síntese de Fala (TTS), o objetivo é garantir a privacidade e a segurança dos dados do usuário, ao mesmo tempo que busca um desempenho estável em diversos cenários. O estudo abrange os fundamentos do Processamento de Linguagem Natural (NLP), práticas na Interação Humano-Computador e avanços recentes em modelos de linguagem, como Transformers, além de técnicas para seu uso e aplicações. A metodologia de projeto e de desenvolvimento é apresentada, incluindo a escolha de ferramentas e tecnologias específicas. Os resultados e as implicações do protótipo são discutidos, juntamente com possíveis áreas para pesquisas futuras.
+
+\end{abstract}
+
+
+\textbf{\textit{Palavras-chave}}: Processamento de Linguagem Natural; Interação Humano-Computador; Grande Modelo de Linguagem; Transformers; Modelos de Linguagem Offline.
+
+\IEEEpeerreviewmaketitle
+
+\section{Introdução}
+
+A rápida evolução da tecnologia nos últimos anos tem transformado a maneira como se interage com computadores e dispositivos eletrônicos. Em particular, o Processamento de Linguagem Natural (PLN) emergiu como uma área crucial da Inteligência Artificial, permitindo que máquinas compreendam e processem a linguagem humana de maneira cada vez mais sofisticada. Desde assistentes virtuais pessoais até sistemas de atendimento ao cliente baseados em \textit{chatbots}, o PLN desempenha um papel fundamental em uma ampla gama de aplicativos e serviços \cite{jurafsky2000speech,hapke2019natural}.
+
+No entanto, muitos sistemas de PLN dependem de conexões de Internet para funcionar adequadamente, o que pode apresentar desafios em ambientes com conectividade limitada ou preocupações com privacidade de dados. Portanto, o foco é construir um protótipo de interação humano-computador que seja capaz de processar a língua natural com níveis de  eficiência e precisão, sem necessariamente depender de uma conexão com a Internet. Dessa forma, é possível garantir o mínimo de privacidade e segurança dos dados dos usuários.
+
+Ao longo deste trabalho, explora-se os fundamentos do PLN, as melhores práticas em Interação Humano-Computador e os avanços recentes em modelos de linguagem, como os Transformers. Além disso, é detalhada a metodologia de projeto e desenvolvimento, incluindo a escolha de ferramentas e tecnologias específicas. Por fim, são apresentados os resultados iniciais de protótipo e a discussão de suas implicações e possíveis áreas de pesquisa futura.
+
+
+\subsection{Objetivo}
+O presente trabalho tem como objetivo principal projetar, implementar e avaliar um protótipo de interação humano-computador que processe a língua natural baseado em um Grande Modelo de Linguagem (\textit{Large Language Model} - LLM), configurando, integrando funcionalidades de Fala para texto (\textit{Speech To Text} - STT), por meio de \textit{prompts}, Texto para Fala (\textit{Text To Speech} - TTS), para resposta auditiva, porém  \textit{offline}.
+
+Como objetivos específicos, assume-se:
+
+\begin{itemize}
+    \item pesquisar e escrever sobre PLN e LLM; % O uso de "pesquisar e escrever sobre PLN e LLM" poderia ser reformulado para ser mais conciso.
+    \item pesquisar e testar bibliotecas para PLN;
+    \item pesquisar e testar bibliotecas Python de PLN (Transformers)
+    \item pesquisar e testar ambientes de validação ou avaliação do sistema construído.
+\end{itemize}
+
+
+\subsection{Justificativa}
+A relevância deste trabalho reside na crescente demanda por sistemas de interação humano-computador mais eficientes e adaptáveis, especialmente aqueles que lidam com processamento de linguagem natural. Com a proliferação de assistentes virtuais e tecnologias de IA, a capacidade de entender e processar a linguagem humana de forma precisa e eficiente tornou-se essencial em uma variedade de contextos, desde assistência ao cliente até automação de tarefas. Este projeto visa preencher uma lacuna importante, oferecendo uma solução que não depende de conexão com a Internet, garantindo assim privacidade e segurança dos dados dos usuários, além de proporcionar um desempenho mais estável em ambientes onde a conectividade pode ser limitada.
+
+\section{Revisão Bibliográfica}
+Para a compreensão da proposta, buscou-se tratar de assuntos referentes ao Processamento da Língua Natural, boas práticas da Interação Humano-Computador, Trabalhos Relacionados e tecnologias para a construção de um protótipo de interação.
+
+\subsection{Interação Humano-Computador e Generative Pre-trained Transformer GPT}
+A Interação Humano-Computador (IHC) é uma área de estudo que foca na interface entre usuários e sistemas computacionais. Seu objetivo é criar sistemas que ofereçam uma experiência de uso eficiente e agradável, facilitando a realização de tarefas por parte do usuário. Boas práticas em IHC incluem a usabilidade, a acessibilidade, a eficiência e a satisfação do usuário \cite{Norman13}.
+%###########################REVISAR#################################################
+
+A IHC desempenha um papel significativo na relação com \textit{chatbots} criados com tecnologia GPT. Embora os \textit{chatbots} GPTs sejam projetados para entender e responder às consultas dos usuários de forma eficaz, a IHC pode influenciar a qualidade da interação de várias maneiras, como:
+\begin{itemize}
+    \item design de interface, em que ajuda a criar interfaces amigáveis e intuitivas para os usuários interagirem com os \textit{chatbots};
+    \item \textit{feedback} do usuário para melhorar continuamente o desempenho e a usabilidade do \textit{chatbot};
+    \item personalização da experiência, em que o \textit{chatbot} adapta-se às necessidades específicas e preferências individuais;
+    \item detecção e resolução de problemas, em que o \textit{chatbot} pode identificar problemas de usabilidade, compreensão ou seu próprio comportamento, tentando melhorar a interação;
+    \item garantia de ética e segurança, em que um papel crítico a ser desempenhado para garantir  que os \textit{chatbots} sejam usados de maneira ética e segura, protegendo os usuários contra possíveis riscos, como vazamento de informações pessoais ou propagação de desinformação.
+\end{itemize}
+%###########################REVISAR#################################################
+No contexto da tecnologia GPT, a palavra \textit{Generative}  é bastante direta, pois configuram-se \textit{bots} que geram novos textos. A expressão pré-treinado refere-se a como o modelo passou por um processo de aprendizado a partir de uma enorme quantidade de dados, e o prefixo insinua que há mais espaço para ajustá-lo em tarefas específicas com treinamento adicional \cite{devlin2018bert}. Finalmente, a última palavra (\textit{transformer}), que é a peça-chave fundamental, é um tipo específico de rede neural com um modelo de aprendizado de máquina. Pode ser considerada a invenção mais importante depois Inteligência Artificial \cite{Attention-Is-All-You-Need}.
+
+Segundo Vaswani e colaboradores \cite{Attention-Is-All-You-Need}, existem muitos tipos diferentes de modelos que se pode construir usando transformers. Alguns modelos recebem áudio e produzem uma transcrição, outros recebem texto e produzem imagens, como as ferramentas dall-e\footnote{https://https://openai.com/research/dall-e.} e mid-journey\footnote{https://www.midjourney.com/home.}.
+
+\subsubsection{Transformers}
+
+Registra-se que o Transformer original, introduzido em 2017 pela Google \cite{Attention-Is-All-You-Need}, foi projetado para o uso específico de tradução de texto de um idioma para outro. Por exemplo, a empresa OpenAI tem seu próprio GPT, conhecido como Chat GPT.
+
+A variante  transformers a ser utilizada neste trabalho, que é similar as funcionalidades do Chat GPT, é um modelo treinado para receber trechos de texto e produzir novo texto a partir de uma previsão de palavras ou (\textit{tokens\footnote{Um token é uma unidade básica de texto, geralmente uma palavra ou um caractere, que serve como uma unidade de entrada para processamento em modelos de linguagem e outras tarefas de processamento de texto. \cite{Introduction-to-Information-Retrieval}.}}) o que viriam na sequência. Essa previsão assume a forma de uma distribuição de probabilidade sobre muitos trechos diferentes de texto que podem seguir. À primeira vista, pode-se pensar que prever a próxima palavra/\textit{token} parece ser um objetivo muito diferente de gerar novo texto.
+
+Dessa forma, uma vez que um modelo de previsão tenha sido estabelecido, uma abordagem viável para expandir o comprimento do texto gerado é a utilização de uma estratégia iterativa de amostragem. Inicialmente, proporciona-se ao modelo um trecho inicial para orientar a geração subsequente de texto. Posteriormente, realiza-se uma amostragem aleatória da distribuição de probabilidades resultante, incorporando-a ao texto existente. Esse procedimento é então repetido (iterado), permitindo que o modelo reavalie o texto expandido e ajuste suas previsões com base na totalidade do \textit{corpus} atualizado. Essa metodologia iterativa promove a progressiva ampliação do texto, enriquecendo-o com contribuições sucessivas e refinadas do modelo preditivo \cite{holtzman2019curious}.
+
+No contexto da linguagem natural e do processamento de texto, \textit{corpus} refere-se a um conjunto de textos utilizados para treinar ou avaliar modelos de linguagem, como o modelo de previsão mencionado anteriormente. É a matéria-prima sobre a qual o modelo é treinado ou com a qual ele interage para realizar suas previsões. Assim, quando se refere a \textit{corpus} atualizado, há uma referência ao texto expandido até o momento, incluindo as adições feitas durante o processo iterativo de geração de texto \cite{Foundations-of-Statistical-Natural-Language-Processing}.
+
+Este processo de previsão e amostragem iterativa reflete essencialmente a dinâmica  à interação com sistemas de geração de texto, como o Chat GPT ou outros modelos de linguagem avançados. Durante a interação, o sistema realiza previsões sucessivas, baseadas em fragmentos anteriores de texto e no contexto da conversa, seguidas pela amostragem estocástica das distribuições de probabilidade associadas a cada palavra. Essa abordagem incremental e iterativa é fundamental para a geração de texto fluente e coerente, resultando na produção sequencial de palavras observadas durante a interação com esses sistemas.
+
+\FloatBarrier
+
+\begin{figure}[!h]
+\centering
+\includegraphics[width=3.3in]{images/The Transformer - model architecture.png}
+\caption{Fluxo do Transformer e modelo de arquitetura \cite{Attention-Is-All-You-Need}.} 
+\label{fig:arquiteturaTransformer}
+\end{figure}
+
+\FloatBarrier
+
+Na Figura~\ref{fig:arquiteturaTransformer}, é possível visualizar o fluxo de funcionamento e a arquitetura básica do Transformer. Em termos gerais, quando um \textit{chatbot}\footnote{Conceito trabalhado na próxima seção.},que é baseados em grandes modelos de linguagem Transformer, gera uma palavra, várias etapas intricadas ocorrem nos bastidores. Primeiramente, a entrada é fragmentada em unidades menores chamadas \textit{tokens}. Em textos, esses \textit{tokens} geralmente correspondem a palavras ou partes delas, além de outras combinações comuns de caracteres. Se a entrada incluir imagens ou áudio, os \textit{tokens} podem representar pequenos trechos dessas mídias. Cada \textit{token} é então mapeado para um vetor, uma representação numérica que codifica seu significado \cite{Introduction-to-Information-Retrieval}. Esses vetores são conceitualmente coordenadas em um espaço tri-dimensional, onde palavras semanticamente semelhantes tendem a estar próximas umas das outras. Em seguida, esses vetores são processados por um mecanismo de atenção, que permite que eles interajam entre si e troquem informações para atualizar seus valores \cite{Attention-Is-All-You-Need}.
+
+Por exemplo, o significado da palavra ``modelo'' difere nas frases ``um modelo de aprendizado de máquina'' e ``um modelo de moda''. O mecanismo de atenção determina quais palavras do contexto são relevantes para atualizar os significados de outras palavras e como esses significados devem ser ajustados. É importante ressaltar que o significado de uma palavra está codificado nos vetores de entrada. Após isso, os vetores passam por outra operação, frequentemente referida como uma Rede Neural Multicamada Perceptron com alimentação à frente (\textit{feedforward}), dependendo da fonte. Nessa etapa, todos os vetores são processados simultaneamente pela mesma operação. Embora essa etapa seja mais complexa, em resumo, é como se cada vetor respondesse a uma série de perguntas específicas e fosse atualizado com base nessas respostas \cite{Attention-Is-All-You-Need}. Todas as operações executadas nesses blocos são essencialmente uma série de multiplicação de matrizes, o que forma a base computacional desses modelos de linguagem avançados, conforme ilustrado na Figura~\ref{fig:VisualizacaoMatrizes.}.
+
+\FloatBarrier
+
+\begin{figure}[!h]
+\centering
+\includegraphics[width=3.3in]{images/Transformer inference in tokens flow.png}
+\caption{Visualização do fluxo de multiplicação entre matrizes durante geração \cite{3Blue1Brown}.} 
+\label{fig:VisualizacaoMatrizes.}
+\end{figure}
+
+\FloatBarrier
+
+Segundo Haykin \cite{haykin2001redes}, uma Rede Neural Multicamada \textit{Feedforward} Perceptron, muitas vezes chamada simplesmente de Rede Neural Multicamada (MLP, do inglês \textit{Multilayer Perceptron}), é um tipo de modelo de rede neural artificial composto por múltiplas camadas de neurônios, cada uma conectada à camada subsequente. Essa rede é um modelo poderoso e flexível que pode aprender a representar relações complexas nos dados e é frequentemente usado em tarefas de aprendizado supervisionado, como classificação e regressão.
+
+No contexto de aprendizado de máquina, a regressão refere-se a uma técnica usada para prever valores contínuos com base em variáveis independentes. Em outras palavras, o objetivo da regressão é modelar a relação entre uma variável de saída (ou resposta) e uma ou mais variáveis de entrada (ou preditoras). Por exemplo, imagine que se está construindo um modelo de geração de texto para prever o próximo caractere em uma sequência com base nos caracteres anteriores. Nesse caso, é possível tratar cada caractere como uma variável independente e o próximo caractere como a variável dependente. Assim, dado o texto:
+
+``O cachorro cor''
+
+Para prever o próximo caractere depois de ``cor'', pode-se usar regressão. Neste caso, deve-se considerar os caracteres da expressão ``O cachorro '' como a variável independente X e ``cor'' como a variável dependente Y. É possível representar os caracteres como números usando codificação \textit{one-hot}, onde cada caractere é representado por um vetor binário único. Em seguida, deve-se preencher esses vetores para um modelo de regressão, como uma rede neural, que aprende a prever a probabilidade de cada possível próximo caractere com base nos caracteres anteriores.
+
+Após o treinamento, o modelo pode gerar texto prevendo o próximo caractere em sequência com base nos caracteres anteriores. Por exemplo, se o modelo prever que o próximo caractere mais provável após ``cor'' é ``r'', ele poderá gerar a sequência ``O cachorro corr''. 
+
+
+% Existem diferentes tipos de regressão, dependendo das características dos dados e da relação entre as variáveis:
+
+% 1. **Regressão Linear Simples:** Envolve apenas uma variável independente e uma variável dependente. O modelo assume uma relação linear entre essas variáveis, representada por uma linha reta.
+
+% 2. **Regressão Linear Múltipla:** Permite a inclusão de múltiplas variáveis independentes para prever uma variável dependente. O modelo assume uma relação linear entre as variáveis, mas em um espaço de maior dimensionalidade.
+
+% 3. **Regressão Polinomial:** Permite modelar relações não lineares entre as variáveis, ajustando um polinômio aos dados.
+
+% 4. **Outros tipos de regressão:** Existem também outras técnicas de regressão, como regressão logística para problemas de classificação binária e regressão de séries temporais para prever valores futuros com base em padrões temporais.
+
+% Em resumo, a regressão é uma ferramenta fundamental em aprendizado de máquina para modelar e prever valores contínuos com base em variáveis independentes. É amplamente utilizada em uma variedade de domínios, incluindo finanças, economia, ciências sociais e muitos outros.
+
+\subsection{Processamento da Língua Natural}
+
+Conforme Hapke e colaboradores \cite{hapke2019natural}, Processamento da Linguagem Natural (PLN) é uma subárea da Inteligência Artificial que tem foco na interação entre computadores (máquinas) e linguagem humana (falada e/ou escrita). Isso significa que PLN possui técnicas (algoritmos e ferramentas) para entender, interpretar e gerar linguagem humana de forma semelhante à maneira como os humanos o fazem. Entre as principais tarefas de PLN, é possível citar \cite{hapke2019natural}:
+
+\begin{itemize}
+    \item compreensão de texto: extrai informações relevantes de documentos, e-mails, redes sociais, entre outros;
+    \item tradução automática: realiza tradução de texto entre diferentes idiomas;
+    \item resumo automático: resume textos diversos;
+    \item análise de sentimentos: busca identificar emoções expressas em textos, útil para análise de opiniões em redes sociais, avaliações de produtos, etc;
+    \item geração de texto: produz textos automaticamente, como em \textit{chatbots}, respostas automáticas de e-mails, etc;
+    \item classificação de texto: classifica documentos em categorias ou contextos, como em análise de documentos legais, detecção de spam, etc.
+\end{itemize}
+
+O Processamento da Língua Natural está desempenhando um papel fundamental na evolução dos sistemas informatizados, tornando-os mais inteligentes, eficientes e capazes de lidar com a complexidade da linguagem humana, principalmente questões de ambiguidade. 
+
+Para se utilizar desse recurso, há várias alternativas, como:
+
+\begin{itemize}
+    \item bibliotecas: existem  bibliotecas em diversas linguagens de programação, como NLTK (Python), SpaCy (Python), Stanford NLP (Java), entre outras;
+    \item API: algumas empresas oferecem API de PLN prontas para uso, como Google Cloud Natural Language API, Microsoft Azure Text Analytics;
+    \item modelos pré-treinados: muitas vezes, é possível utilizar modelos de PLN pré-treinados para tarefas ou contextos específicos, sem a necessidade de um treinamento demorado que pode não ser eficiente pela quantidade e qualidade das amostras de treinamento.
+\end{itemize}
+
+PLN possui alguns exemplos práticos, como \textit{"Conversational AI"} ou \textit{Chatbot}, que geram assistência virtual em sites de comércio eletrônico, suporte ao cliente, por exemplo. Segundo Adamopoulou e Moussiades \cite{adamopoulou2020overview}, um \textit{chatbot} é um programa de computador projetado para simular uma conversa humana, interagindo com usuários por meio de texto ou voz em linguagem natural.  Os \textit{chatbots} podem ser simples, respondendo a comandos básicos e consultas predefinidas, ou podem ser mais avançados, com uso de PLN e aprendizado de máquina, para entender e responder a uma ampla variedade de perguntas e comandos de forma mais sofisticada. Esses sistemas  são integrados a plataformas de mensagens instantâneas, sites, aplicativos móveis e assistentes virtuais, proporcionando uma experiência interativa e automatizada para os usuários. O objetivo principal dos \textit{chatbots} é fornecer respostas rápidas e eficientes às consultas dos usuários, melhorando a experiência do cliente e reduzindo a carga de trabalho em equipes de suporte ou atendimento ao cliente \cite{PKenny2011}.
+
+\subsection{prompts em LLM chatbots}
+
+Os \textit{prompt} em \textit{Large Language Models} (LLMs), como o Chat GPT, são essencialmente entradas (\textit{inputs}) de texto que são fornecidas ao modelo para iniciar uma conversa ou direcionar sua geração de texto em um contexto específico. Eles são uma parte fundamental da interação com esses modelos, pois permitem que o modelo seja influenciado no que produzirá em sua resposta antes da interação com o usuário \cite{NEURIPS2020_1457c0d6}.
+
+A utilização de \textit{prompt} em programação possibilita a execução de diversas tarefas de natureza interessante e funcional, como \cite{radford2019language}:
+\begin{itemize}
+
+    \item iniciar interações: os \textit{prompt} são empregados para iniciar diálogos com o modelo, fornecendo um contexto inicial ou uma indagação para dar início à interação. Por exemplo, é possível iniciar uma conversa com um assistente virtual efetuando uma entrevista utilizando a abordagem de ``Você é um entrevistador com mais de 20 anos de experiência para uma empresa de engenharia que está contratando um engenheiro elétrico...'';
+    \item direcionar a geração de texto: os  \textit{prompt} permitem orientar o modelo quanto ao conteúdo a ser gerado em sua resposta. Por exemplo, ao utilizar o Chat GPT para redigir um artigo acerca da Inteligência Artificial, pode-se introduzir um  \textit{prompt} como ``Desenvolva um parágrafo acerca dos recentes avanços em IA'';
+    \item solicitar informações específicas: os  \textit{prompt} são empregados para requisitar informações específicas do modelo. Por exemplo, ao desenvolver um assistente virtual para fornecer dados meteorológicos, é possível iniciar com um  \textit{prompt} como ``Forneça a previsão do tempo para amanhã em Nova York'' é possível com \textit{Retrieval Augmented Generation}, que é abordado na sequência;
+    \item personalizar a interação: por meio de  \textit{prompt} customizados, torna-se possível adaptar a interação conforme as preferências do usuário ou as exigências particulares do contexto. Por exemplo, ao elaborar um assistente virtual para um aplicativo de condicionamento físico, pode-se começar com um  \textit{prompt} como ``Registre a atividade de corrida realizada hoje'' para iniciar o registro dos dados de exercícios do usuário;
+    \item controlar o tom e o estilo da resposta: os  \textit{prompt} também permitem controlar o tom e o estilo da resposta gerada pelo modelo. Por exemplo, pode-se iniciar com um \textit{prompt} como ``Elabore uma narrativa de horror sinistra'' para obter uma resposta com caráter mais sombrio e atmosférico.
+    
+\end{itemize}
+
+Por fim, a programação de \textit{prompts} oferece uma abordagem flexível e robusta para interagir com LLMs como o Chat GPT, possibilitando direcionar e personalizar a geração de texto conforme as necessidades e objetivos específicos. Com criatividade e expertise, é viável utilizar \textit{prompts} para executar uma variedade de tarefas e criar experiências ao usuário \cite{raffel2020exploring}.
+
+\subsection{Outras tecnologias LLM}
+
+Um modelo pré-treinado multimodal é um tipo de modelo de Inteligência Artificial que foi treinado em dados provenientes de várias modalidades, como texto, imagem, áudio e/ou vídeo. Esses modelos são capazes de compreender e gerar informações a partir de diferentes tipos de entrada, o que os torna bastante versáteis em uma variedade de tarefas. Por exemplo, um modelo pré-treinado multimodal pode ser treinado em uma tarefa de compreensão de texto, como responder a perguntas com base em um contexto textual, ao mesmo tempo em que é treinado em tarefas de reconhecimento de imagens, como identificar objetos em fotografias. Isso permite que o modelo entenda tanto o texto quanto as imagens e responda a perguntas com base em informações de ambas as modalidades. Esses modelos pré-treinados multimodais têm aplicações em uma variedade de campos, incluindo visão computacional, processamento de linguagem natural, reconhecimento de voz e muito mais. Eles são especialmente úteis em tarefas que envolvem dados de várias modalidades, permitindo que os sistemas de IA compreendam e gerem informações de maneira mais abrangente e precisa \cite{radford2021learning}.
+
+Os pensamentos dos agentes em linguagem de modelo de linguagem grande (LLMs) são abstratos, mas se pode entender o processo como uma complexa rede neural trabalhando para gerar respostas coerentes. Possui um fluxo de trabalho bem definido:
+
+\begin{itemize}
+    \item entrada de dados: o agente recebe a entrada em forma de texto ou contexto;
+    \item compreensão: a rede neural analisa e compreende a entrada, identificando palavras-chave, padrões e contexto;
+    \item geração de resposta: com base na compreensão da entrada, o agente gera uma resposta. Isso envolve pesar diferentes opções de palavras e estruturas de frases para criar uma resposta coerente e relevante;
+    \item revisão: a resposta gerada é revisada para garantir que seja gramaticalmente correta, relevante para o contexto e adequada ao propósito da interação;
+    \item decisão: a resposta final é selecionada e enviada como saída.
+\end{itemize}
+
+Durante todo esse processo, a rede neural pode ``pensar'' de várias maneiras. Pode estar ponderando diferentes palavras para escolher a mais apropriada, avaliando a coerência da resposta em relação ao contexto ou ajustando a estrutura gramatical para garantir fluidez na comunicação. Embora esses ``pensamentos'' ou deliberações sejam abstratos e não envolvam consciência ou intenção como em seres humanos, eles representam as operações computacionais realizadas pela rede neural para gerar uma resposta significativa \cite{NEURIPS2020_1457c0d6}.
+
+\textit{Retrieval Augmented Generation} (RAG) são  modelos de linguagem neural pré-treinados que aprendem a partir de um grande volume de conhecimento profundo de dados. Eles podem fazê-lo sem acesso externo à memória, como uma base de conhecimento implícita parametrizada. Embora isso seja impressionante, tais modelos têm desvantagens:
+\begin{itemize}
+    \item Não podem facilmente expandir ou revisar sua memória;
+    \item Não podem fornecer \textit{insight} direto sobre suas previsões;
+    \item E podem produzir ``alucinações'' sobre assuntos que não existiam durante seu treinamento.
+\end{itemize}
+Bibliotecas como \textit{Langchain} permitem desenvolver aplicações alimentadas por grandes modelos de linguagem (LLMs) e muitas dessas aplicações requerem dados específicos do usuário ou informações atuais que não fazem parte do conjunto de treinamento do modelo. A principal forma de fornecer dados externos é através da Geração Aumentada por Recuperação (RAG). Nesse processo, dados externos são recuperados e então passados para o LLM durante a etapa de geração, sendo possível que (LLM) possa conversar sobre algo que não esta na sua base de dados. Por exemplo o clima de um local neste momento, informações de documentos, bancos de dados entre outros \cite{lewis2020retrieval}.
+
+% Exemplo de como é passado as informações para a (LLM) 
+% Answer the question based only on the following context:
+
+% {context}
+% ---
+% Answer the question based on the above context: {question}
+
+ % Tambem há modelos híbridos que combinam memória paramétrica com memórias não-paramétricas (ou seja, baseadas na recuperação) podem abordar alguns desses problemas porque o conhecimento pode ser diretamente revisado e expandido, e o conhecimento acessível pode ser inspecionado e interpretado. Os modelos REALM e ORQA, recentemente introduzidos, que combinam modelo de linguagem mascarada com um recuperador diferenciável, apresentaram resultados promissores.
+
+
+\subsection{Bibliotecas do ecossistema Python para IA}
+
+Em termos práticos, há alguns recursos ou ferramentas consolidados (com comunidade ativa e documentação atual), como:
+\begin{itemize}
+    \item Transformers: biblioteca  essencial para trabalhar com modelos de linguagem de grande escala (LLM), como os GPT da OpenAI. Ela oferece um framework fácil de usar para carregar, treinar e usar modelos pré-treinados para uma variedade de tarefas de processamento de linguagem natural;
+    \item Hugging Face Hub: biblioteca que fornece acesso conveniente a modelos pré-treinados para PLN, incluindo modelos LLMs como GPT. Ela simplifica o processo de descoberta, compartilhamento e uso de modelos de última geração;
+    \item Sentence Transformers:  biblioteca que tem foco em   sentenças embutidas que podem ser usados em tarefas de processamento de linguagem natural, como classificação de texto, categorização e recuperação de informações;
+    \item PyTorch e TorchVision: essas bibliotecas são fundamentais para treinar e executar modelos de aprendizado mais complexo (profundo), incluindo LLMs. A PyTorch é uma estrutura de aprendizado de máquina de código aberto que oferece flexibilidade e controle, enquanto TorchVision é voltada para visão computacional, mas também pode ser útil para pré-processamento de dados em PLN;
+    \item Tokenizers:  biblioteca que oferece funcionalidades para tokenização eficiente de texto, o que é essencial para preparar dados para entrada em modelos de linguagem. Ela suporta diferentes esquemas de tokenização, incluindo Subword tokenization, Byte-Pair Encoding (BPE) e WordPiece. Registra-se que tokenização é o processo de dividir um texto em unidades menores chamadas de \textit{tokens}. Em linguagem natural, esses \textit{tokens} geralmente correspondem a palavras individuais, mas também podem ser caracteres, sub palavras ou outras unidades, dependendo do contexto e da aplicação. Por exemplo, considere a frase: ``A chuva cai suavemente lá fora.'' Após a tokenização, essa frase seria dividida em \textit{tokens} individuais, resultando em: ['A', 'chuva', 'cai', 'suavemente', 'lá', 'fora', '.'].    
+\end{itemize}
+
+\subsection{Trabalhos Relacionados}
+Os trabalhos elencados nesta seção visam contribuir de alguma forma com esta pesquisa, seja pela tecnologia utilizada, seja pela forma como é realizada a comunicação com o ser humano.
+
+O trabalho relacionado \textit{Text-Generation-WebUI} \cite{text-generation-webui} é um sistema Web, com varias funcionalidades inclusive com \textit{finetuning} (treinar um modelo genérico e alterar seus pesos para sua própria aplicação ``Especialização''). O sistema também conta com uma API com modelos de LLM, que são encontrados no site \textit{huging face}, e treinados em grandes conjuntos de dados para aprender a prever e gerar texto de forma coerente e contextualmente relevante. A Figura~\ref{fig:webui}, ilustra a interface Web que permite que os usuários interajam com o modelo de geração de texto de forma amigável, fornecendo uma caixa de entrada onde podem digitar um \textit{prompt} ou uma frase inicial, e em seguida visualizar a resposta gerada pelo modelo. Isso pode ser útil para diversas aplicações, desde a geração de texto criativo até a criação de assistentes virtuais.
+
+\FloatBarrier
+
+\begin{figure}[!h]
+\centering
+\includegraphics[width=3.3in]{images/Text generation web UI.png}
+\caption{Ambiente Text-Generation-WebUI \cite{text-generation-webui}} 
+\label{fig:webui}
+\end{figure}
+
+\FloatBarrier
+
+O trabalho relacionado \textit{Lobe Chat} (Figura~\ref{fig:Lobe-Chat}) \cite{Lobe-Chat} é uma estrutura de chat de IA de código aberto e design moderno mas é somente um \textit{front-end} para interação. Ele depende de outros aplicativos ou APIs para funcionar, como API OpenAI, Gemini, Ollama, Bedrock, Azure, Mistral, Perplexity, além de diversos modos, como Visão e TTS (texto para fala), através de uma arquitetura de \textit{plugin}. Com um único clique, é possível implantar gratuitamente sua própria aplicação de chat baseada no Chat GPT de forma privada como \ref{fig:Lobe-Chat}. Similarmente ao projeto \textit{Text-Generation-WebUI}, o \textit{Lobe Chat} oferece uma interface amigável para interagir com modelos de linguagem, permitindo que os usuários insiram \textit{prompts} ou frases iniciais e visualizem as respostas geradas pelo modelo. Essa abordagem pode ser valiosa para uma variedade de aplicações, desde \textit{chatbots} inteligentes até sistemas de assistência virtual com Agentes.
+
+\FloatBarrier
+
+\begin{figure}[!h]
+\centering
+\includegraphics[width=3.3in]{images/Lobe HUB UI.png}
+\caption{Lobe Chat \cite{Lobe-Chat}} 
+\label{fig:Lobe-Chat}
+\end{figure}
+
+\FloatBarrier
+
+\textit{Open WebUI} é também um \textit{front-end}, assim como o Lobe Chat, é uma interface Web para ser utilizada com diversas APIs.
+
+% CONFUSO DEMAIS
+% , principalmente com o projeto Ollama que é oque utilizo atualmente com o protótipo que é um programa que carrega LLMs para ser usada em CLI (Comand line interface) como o Cmd, windowns terminal e terminais linux ou via API que é o método que uso para me comunicar com o mesmo.
+
+
+\subsection{Alguns apontamentos sobre a revisão bibliográfica}
+Finalmente, em relação a revisão bibliográfica foram realizadas algumas considerações, como:
+\begin{itemize}
+    \item em relação a PLN, o projeto de IHC vai ser via um \textit{chatbot} que pode ser utilizado \textit{offline};
+    \item o comportamento de IHC do \textit{chatbot} projetado vai garantir uma interação mais amigável, pois deve permitir a interação falada;
+    \item  o projeto vai usar o modelo pre-treinado (LLAMA3-8B) por ser o modelo com melhor desempenho, além de ser gratuito, código aberto e possuir 8 bilhões de parâmetros de entrada e seus respectivos pesos;
+    \item  apesar de surgirem constantemente novas tecnologias de \textit{chatbots} GPTs, como modelo multimodal e pensamento de agente para LLM, decidiu-se não investigar detalhadamente esses recursos, por questão de escopo e de tempo.
+\end{itemize}
+
+Já em relação aos trabalhos relacionados, pode-se registrar que o trabalho \textit{Text-Generation-WebUI} \cite{text-generation-webui} foi essencial para pesquisa e entendimento do que poderia ser feito com LLMs e todos os parâmetros que podem ser passados diretamente a uma LLM. 
+
+Assim, como o uso inicial e a documentação da API do \textit{Text-Generation-WebUI}, similar à API do próprio Chat GPT, o projeto Ollama também possibilita uma API compatível com a API da OpenAI do Chat GPT. No entanto, sem interface, funcionando como um serviço para carregar e utilizar LLMs Via sua API ou CLI.
+
+
+\section{Metodologia}
+
+A metodologia de projeto e desenvolvimento do protótipo é baseada em SCRUM apoiada pela técnica KANBAN. Além disso,  uma interface deve ser construída para processar a língua natural e avaliar a proposta. Para a construção do texto, foi utilizada pesquisa de revisão bibliográfica.
+
+As ferramentas utilizadas são:
+\begin{itemize}
+    \item Linguagem Python;
+    \item Bibliotecas do universo Python: transformer, NLTK, langchain-community, ollama, faster-whisper, pyttsx3, SpeechRecognition;
+    \item Modelo pré-treinado LLAMA3-8B;
+    \item Visual Studio Code;
+    \item Astah;
+    \item Trello.
+\end{itemize}
+
+ O hardware utilizado é composto por:
+\begin{itemize}
+    \item Processador AMD Ryzen 7 5800X3D;
+    \item Memória RAM 32GB 3200 MT  (\textit{Megatransfer});
+    \item Acelerador Grafico RTX3060TI 8GB;
+    \item Armazenamento SSD 512GB 3000Mb/s;
+    \item Sistema operacional Windows 11 64bits.
+\end{itemize}
+
+\subsection{Ideia do protótipo}
+A Figura~\ref{fig:Mapamental}, apresenta a ideia da pesquisa e a relação com algumas áreas ou recursos da Computação, como Interface Humano-Computador, Sistemas de Comportamento Inteligente (IA), Processamento da Língua Natural, LLM e bibliotecas Python. Na imagem, buscou-se ilustrar o contexto da pesquisa, bem como a dependência da proposta com LLM, seguido por PLN e IHC, já que o protótipo é um \textit{chatbot} de interação textual e verbal.
+
+\FloatBarrier
+
+\begin{figure}[!h]
+\centering
+\includegraphics[width=3.0in]{images/Mapa mental.png}
+\caption{Mapa Mental com as áreas da pesquisa.} 
+\label{fig:Mapamental}
+\end{figure}
+
+\FloatBarrier
+
+Na Figura~\ref{fig:Casodeuso}, é possível perceber as principais funcionalidades do protótipo: 'setar \textit{prompt} de personalidade ou inferência', 'liberar \textit{prompt} para inferência ou liberar o assistente para interação' e 'interagir com protótipo (texto ou áudio)', pois são elas que tem a interação quase que direta com os usuários. Registra-se que é necessário a presença de um usuário Administrador, uma vez que ele que configura o ambiente de interação: carregando ou setando modelos de base de conhecimentos; setando o estilo e perfil de interação.
+
+\FloatBarrier
+
+\begin{figure}[!h]
+\centering
+\includegraphics[width=3.3in]{images/UseCase.png}
+\caption{Caso de uso do protótipo.} 
+\label{fig:Casodeuso}
+\end{figure}
+
+\FloatBarrier
+
+%colocar um diagrama de atividade que ilustre a ideia do sistema em um tutorial de funcionamento
+Na Figura~\ref{fig:Diagrama de Atividade}, é possível visualizar a ideia de como o projeto se comunica com as duas classes principais: a classe  Filas e a classe \textit{System}, onde há  métodos relacionados diretamente  ao usuário.
+
+\FloatBarrier
+
+\begin{figure}[!h]
+\centering
+\includegraphics[width=3.3in]{images/Activity Diagram Prototipo.png}
+\caption{Diagrama de Atividade da ideia do sistema Protótipo.} 
+\label{fig:Diagrama de Atividade}
+\end{figure}
+
+\FloatBarrier
+
+\subsubsection{Interface do chatbot} %REVER SE É POSIVIVEL DADO O TEMPO DE DESENVOLVIMENTO
+A proposta do protótipo de interação visa abordar a comunicação tanto escrita quanto falada, estabelecendo uma interação bidirecional entre o usuário e o \textit{chatbot}. Com isso, a Interação Humano-Computador (IHC) pretendida é influenciar positivamente na qualidade da interação, coletando \textit{feedback} do usuário (volume, repetição da resposta, etc.) e promovendo a personalização da experiência. A Figura~\ref{fig:chatbot} mostra o \textit{prompt} proposto, configurado e pronto para receber interação falada ou escrita do usuário.
+
+\FloatBarrier
+
+\begin{figure}[!h]
+\centering
+\includegraphics[width=3.3in]{images/Prototipo test.png}
+\caption{Interação inicial do \textit{chatbot} via (CLI) \textit{Comand line interface}.} 
+\label{fig:chatbot}
+\end{figure}
+
+\FloatBarrier
+
+
+\subsubsection{Processo avaliação do protótipo}
+
+Para avaliar ou testar o protótipo proposto, é necessário construir um conjunto de perguntas e suas possíveis respostas. Como o ambiente de interação se concentra na fala, essas perguntas serão ditadas ao protótipo de forma rápida sem pausas ou lentamente com intervalos longos. A qualidade da resposta não é objeto de avaliação, pois o protótipo utiliza um modelo pré-treinado da empresa Meta, como mencionado anteriormente. No entanto, a forma de interação, seja com contexto, sem contexto ou com fala pausada, será objeto de avaliação, uma vez que o protótipo precisa tratar do contexto e das falas pausadas. Para ter um parâmetro de comparação, a assistente Alexa\footnote{A Amazon Alexa, também conhecida como Alexa, é uma assistente virtual desenvolvida pela Amazon, utilizada principalmente como sistema embarcado nos alto-falantes inteligentes Amazon Echo.} será também utilizada para avaliar o tempo de resposta e a compreensão da fala do usuário em relação ao protótipo proposto.
+
+\section{Estrutura do Projeto}
+
+\FloatBarrier
+
+\begin{figure}[!h]
+\centering
+\includegraphics[width=3.3in]{images/Estrutura do projeto.PNG}
+\caption{Estrutura de pastas/arquivos do projeto.} 
+\label{fig:estrutura}
+\end{figure}
+
+\FloatBarrier
+
+\subsection{Componentes Principais}
+\begin{itemize}
+    \item \textbf{Kokoro}: Responsável pelo processamento de linguagem natural (NLP), reconhecimento de fala (STT) e síntese de fala (TTS).
+    \item \textbf{Queues}: Gerencia as filas de mensagens e a interação com a personalidade do chatbot.
+    \item \textbf{Banco de Dados Vetorial}: Utiliza a técnica de \textit{Retrieval-Augmented Generation} (RAG) para LLMs, armazenando e recuperando informações relevantes de interações passadas ou, documentos como pdfs e arquivos .json.
+\end{itemize}
+
+\section{Diagrama de classes}
+
+\FloatBarrier
+
+\begin{figure}[!h]
+\centering
+\includegraphics[width=3.3in]{images/Class Diagram.png}
+\caption{diagrama de classes do projeto.} 
+\label{fig:estrutura}
+\end{figure}
+
+\FloatBarrier
+
+\section{Considerações}
+
+Ao longo do texto, buscou-se abordar e exemplificar assuntos pertinentes ao Processamento de Linguagem Natural (PLN), Interação Humano-Computador (IHC), \textit{chatbots} e modelos pré-treinados de Modelos de Linguagem de Grande Escala (LLMs), que contêm um conjunto de ``conhecimentos'' ou textos em diversos contextos. Além disso, foram apresentados trabalhos relacionados que utilizam IHC via \textit{prompt} e modelos pré-treinados (\textit{online} ou \textit{offline}).
+
+A proposta tem a intenção de gerar uma interação falada via \textit{prompt} (ou que permita também a interação digitada em chat) e de forma \textit{offline}, com um modelo baixado, instalado, configurado e adaptado para um contexto específico (a definir na próxima etapa).
+
+O tema é relevante, assim como as tecnologias que lhe dão suporte. Os modelos GPT disponíveis estão rapidamente gerando impactos na sociedade, seja de forma positiva ou negativa. É um fato que os GPTs vão influenciar as sociedades, facilitando ou não, seja como uma poderosa ferramenta de trabalho ou como um mecanismo de manipulação e condução de opiniões.
+
+Assim sendo, este trabalho não apenas busca o projeto de um protótipo, mas também promove uma reflexão sobre os assuntos e suas tecnologias.
+
+
+\printbibliography
+
+\end{document}
+
+%boas práticas de escrita em texto científico:
+% 1) frases curtas
+% 2) sempre depois de uma afirmação impactante ou definição ou apresentação de conceitos de área, colocar um fonte de citação
+%3) evitar expressões de muito impacto: 
+%4) evitar usar primeira pessoa do singular ou plural
+
+% assistente: interação + realização de atividade
+% conversa: interação
+%     - psicológica: apoio a situações de tristeza, ...
+%     - orientação informacional: bancos financeiros, imobiliárias, empresas em geral com SAC
+% tutor: interação + realização de atividades + avaliação
+
+A FAZER
+
+Usando um programa de Inteligência Artificial (IA) chamado "Conversational AI" ou "Chatbot". Que é uma
+ferramenta de linguagem natural processada (NLTK)  ou \textit{(Natural Language Toolkit)} que gera respostas humanamente semelhantes baseadas em texto e conhecimentos pré-estabelecidos.
+Este tipo de programa é projetado para interagir com usuários de forma natural, utilizando linguagem informal e flexível. 
+Ele pode ser usado em aplicações variadas, como suporte ao cliente, chatbots de conversa, Inteligência Artificial para aplicativos móveis, entre outros e são capazes de gerar respostas complexas e personalizadas com base nos dados de seus parâmetros(ou pesos) e diversificados.
+%############################################################################################
+
+Subseção: Ideia do Protótipo Diagramas:
+    Estrutura Tecnológica do Protótipo: Elabore um diagrama que ilustre a arquitetura do sistema, destacando os principais componentes e suas interações.
+        Dinâmica de Funcionamento: Descreva, por meio de diagramas ou fluxogramas, como o protótipo funciona em diferentes cenários de uso, desde a entrada de dados até a saída de resultados.
+
+Mapa Mental das Áreas do Trabalho: 
+    Crie um mapa mental que represente visualmente as diferentes áreas abordadas no trabalho, como reconhecimento de fala, processamento de linguagem natural, interface de usuário, etc.
+
+Subseção: Modelagem
+    Descreva os modelos de linguagem e as técnicas de PLN utilizadas no protótipo, explicando suas características principais, como arquitetura, algoritmos subjacentes, etc.
+        Apresente os métodos de treinamento e ajuste dos modelos, incluindo detalhes sobre os conjuntos de dados utilizados, os hiperparâmetros selecionados e as estratégias de validação.
+
+Subseção: Algumas Interfaces de IHC
+    Mostre algumas interfaces de usuário desenvolvidas para o protótipo, destacando suas funcionalidades principais e o fluxo de interação do usuário.
+        Discuta as decisões de design tomadas durante o desenvolvimento das interfaces, como escolha de cores, disposição de elementos, feedbacks visuais, etc.
+
+Subseção: Processo de Avaliação do Protótipo
+    Descreva o processo de avaliação usado para testar o protótipo em diferentes cenários de uso, incluindo detalhes sobre os métodos de coleta de dados, os critérios de avaliação e os participantes envolvidos.
+        Apresente os resultados da avaliação, destacando os pontos fortes e as limitações do protótipo identificados pelos usuários.
+            Discuta as lições aprendidas com o processo de avaliação e as possíveis melhorias que podem ser feitas no protótipo com base nos feedbacks recebidos.
+
+Detalhamento da Metodologia: 
+    Embora o texto mencione as etapas gerais da metodologia, poderia ser útil fornecer mais detalhes sobre como cada etapa será realizada. Isso inclui especificações técnicas, como as ferramentas exatas a serem utilizadas, os conjuntos de dados que serão empregados, os parâmetros dos modelos a serem ajustados, entre outros.
+
+Resultados Esperados: 
+    Seria útil incluir uma seção dedicada aos resultados esperados do projeto. Isso poderia abordar aspectos como a precisão esperada do reconhecimento de fala, a qualidade da síntese de fala, o desempenho geral do sistema em termos de velocidade e eficiência, e a usabilidade do protótipo em diferentes cenários de uso.
+
+Discussão sobre Desafios e Limitações: 
+    Uma discussão sobre os possíveis desafios e limitações que podem surgir durante o desenvolvimento do protótipo seria valiosa. Isso poderia incluir questões como a disponibilidade e qualidade dos conjuntos de dados, a complexidade dos algoritmos utilizados e possíveis restrições de recursos computacionais.
+
+Considerações Éticas e de Privacidade: 
+    Dada a natureza dos sistemas de PLN e a coleta e processamento de dados sensíveis, seria importante abordar considerações éticas e de privacidade relacionadas ao uso do protótipo. Isso poderia incluir medidas para garantir a proteção dos dados dos usuários e a mitigação de possíveis viéses nos modelos de linguagem.
+
+Trabalhos Futuros: 
+    Uma seção dedicada a trabalhos futuros poderia destacar possíveis extensões ou melhorias no protótipo desenvolvido. Isso poderia incluir investigações adicionais sobre novos algoritmos de PLN, expansão para outros idiomas ou domínios de aplicação, ou a integração de novas funcionalidades de interação humano-computador.
+
+Considerando esses pontos, a inclusão de informações adicionais nessas áreas poderia enriquecer e aprimorar o texto, fornecendo uma visão mais completa e detalhada do projeto de pesquisa.
