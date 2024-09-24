@@ -86,10 +86,14 @@ O sistema é composto pelos seguintes componentes principais:
    # Configuração do Modo Debug
    DEBUG=False  # Defina como True para ativar o modo debug
    
-   # Caminhos para Arquivos de Conversa, Modelos de Voz e Dados# Esses são apenas comentários para referência e não são variáveis de ambiente reais
+   # Caminhos para Arquivos de Conversa, Modelos de Voz e Dados
+   # Esses são apenas comentários para referência e não são variáveis de ambiente reais
    #conversations\GLaDOS\GLaDOS.txt
-   #conversations\GLaDOS\*.json Arquivos json serão carregados para o banco de dados como se fossem o historico de mensagem quando o limite de 8000 tokens é estourado ou se a conversa é salva e o codigo parado
-   #conversations\GLaDOS\PDF\*.PDF Todos PDFs nessa pasta tambem serão carregados ao banco de dados como se fossem memoria,
+   #conversations\GLaDOS\*.json
+   #Arquivos json serão carregados para o banco de dados como se fossem o historico de mensagem.
+   #quando o limite de 8000 tokens é estourado ou se a conversa é salva e o codigo parado
+   #conversations\GLaDOS\PDF\*.PDF
+   #Todos PDFs nessa pasta tambem serão carregados ao banco de dados como se fossem memoria.
    #conversations\GLaDOS\chroma
    #conversations\GLaDOS\model\voices
    #conversations\GLaDOS\model\Models_Style-Bert_VITS2_Portal_GLaDOS_v1_config.json
