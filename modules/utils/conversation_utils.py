@@ -2,6 +2,8 @@ import json
 import os
 import re
 import subprocess
+import globals
+from typing import Any, List, Optional, Sequence, Tuple
 #PATHS i need
 '''
 conversations\GLaDOS
@@ -131,8 +133,6 @@ def read_paragraph_from_file(file_path) -> str:
         paragraph = file.read()
     return paragraph
 
-
-
 def get_path(name):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     return os.path.join(current_dir, name)
@@ -154,3 +154,53 @@ def get_file_paths(script_dir:str, foldername:str, personality:str, system_chang
 def get_personality_dir(foldername_dir, personality):
      personality_dir = os.path.join(foldername_dir + "/" + personality + ".txt")
      return personality_dir
+
+def process_sentence(current_sentence: List[str]):
+        """
+        Join text, remove inflections and actions, and send to the TTS queue.
+
+        The LLM like to *whisper* things or (scream) things, and prompting is not a 100% fix.
+        We use regular expressions to remove text between ** and () to clean up the text.
+        Finally, we remove any non-alphanumeric characters/punctuation and send the text
+        to the TTS queue.
+        """
+        sentence = "".join(current_sentence)
+        sentence = re.sub(r"\*.*?\*|\(.*?\)", "", sentence)
+        sentence = (
+            sentence.replace("\n\n", ". ")
+            .replace("\n", ". ")
+            .replace("  ", " ")
+            .replace(":", " ")
+        )
+        if sentence:
+            return sentence
+        else:
+            return None
+            #self.tts_generation_queue.put(sentence)
+
+def process_line(line):
+        """
+        Processes a single line of text from the LLM server.
+
+        Args:
+            line (dict): The line of text from the LLM server.
+        """
+
+        if not line["stop"]:
+            token = line["response"]
+            return token
+        return None
+
+def clean_raw_bytes(line):
+        """
+        Cleans the raw bytes from the LLM server for processing.
+
+        Coverts the bytes to a dictionary.
+
+        Args:
+            line (bytes): The raw bytes from the LLM server.
+        """
+        line = line.decode("utf-8")
+        line = line.removeprefix("data: ")
+        line = json.loads(line)
+        return line

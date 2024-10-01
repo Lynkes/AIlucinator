@@ -6,6 +6,8 @@ from modules.utils.conversation_utils import load_filtered_words, load_keyword_m
 from langchain.prompts import ChatPromptTemplate
 from colorama import *
 import tiktoken
+import globals
+
 
 class Kokoro:
     """
@@ -90,8 +92,9 @@ class Kokoro:
         self.memory_sise(prompt)
         response = self.llm_provider.generate(prompt, self.model)
         return response
+        
 
-    def generate_voice(self, sentence, temp_filename):
+    def generate_voice(self, sentence, temp_filename: str | None = None, ):
         """
         Gera o áudio da fala a partir de uma sentença usando o provedor TTS.
 
@@ -102,21 +105,18 @@ class Kokoro:
         Returns:
             str: Caminho do arquivo de áudio gerado.
         """
-        self.tts_provider.generate_speech(sentence, temp_filename)
-        return temp_filename
-
+        audio, rate = self.tts_provider.generate_speech(sentence, temp_filename )
+        if temp_filename:
+            return temp_filename
+        else:
+            return audio, rate
+    
     def listen_for_voice(self, timeout):
         """
         Escuta e detecta comandos de voz por um tempo limite usando o provedor STT.
-
-        Args:
-            timeout (int): Tempo limite em segundos para escutar a fala.
-
-        Returns:
-            str: Texto reconhecido da fala.
         """
         return self.stt_provider.listen_for_voice(timeout)
-    
+
     def speech_recognition(self, audio):
         """
         Realiza o reconhecimento de fala a partir de um arquivo de áudio.

@@ -49,6 +49,9 @@ class LLMBase:
         elif provider_name == 'ollama':
             from .ollama import OllamaLLM
             return OllamaLLM()
+        elif provider_name == 'INSTRUCT':
+            from .instruct_request import INSTRUCT
+            return INSTRUCT()
         else:
             raise ValueError(f"Unknown LLM provider: {provider_name}")
 

@@ -60,10 +60,13 @@ class STTBase:
             return GoogleSTT()
         elif provider_name == 'whisper':
             from .whisper import WhisperSTT
-            return WhisperSTT(model_size_or_path=model_size, device=device, compute_type=compute_type)
+            return WhisperSTT(model_size_or_path=model_size, device=device, compute_type=compute_type) 
         elif provider_name == 'voice_recognition':
-            from .voice_recognition import VoiceReC
-            return VoiceReC(model_size_or_path=model_size, device=device, compute_type=compute_type)
+            from .voice_recognition import VoiceRecognition
+            return VoiceRecognition()
+        elif provider_name == 'voice_recognition_Fwhisper':
+            from .voice_recognition_Fwhisper import VoiceRecognition
+            return VoiceRecognition(model_size_or_path=model_size, device=device, compute_type=compute_type)
         else:
             raise ValueError(f"Unknown STT provider: {provider_name}")
         

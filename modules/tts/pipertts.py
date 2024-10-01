@@ -1,7 +1,6 @@
 import subprocess
 import os
 import soundfile as sf
-import wave
 from pathlib import Path
 from modules.tts.tts_base import TTSBase
 
@@ -16,7 +15,8 @@ class PiperTTS(TTSBase):
         self._generate_speech_from_text(text, temp_filename, output_file)
         if save:
             self.save_tts(output_file)
-        return output_file
+        data, samplerate = sf.read(output_file)
+        return data, samplerate
         #self.play_audio(output_file)
     
     def _generate_speech_from_text(self, text, temp_filename, output_file):

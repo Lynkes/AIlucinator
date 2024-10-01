@@ -5,16 +5,60 @@ from queue import Queue, Empty
 import logging
 import keyboard 
 from modules.kokoro import Kokoro
-from modules.stream.LIVE_youtube_api import YoutubeAPI
-from modules.utils.audio_utils import beep, play_audio
+#from modules.stream.LIVE_youtube_api import YoutubeAPI
+from modules.utils.audio_utils import beep, play_audio, percentage_played_audio, clip_interrupted_sentence
 from modules.utils.db_utils import update_db
+from modules.utils.conversation_utils import process_line, clean_raw_bytes, process_sentence
+from modules.stt import vad
+import globals
+import copy
+import json
+import queue
+import re
+import sys
+import threading
+import time
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, List, Optional, Sequence, Tuple
+
+import numpy as np
+import requests
+import sounddevice as sd
+import yaml
+from Levenshtein import distance
+from loguru import logger
+from sounddevice import CallbackFlags
+
+OPENAI_API_KEY= ""
+HOST = "127.0.0.1"
+WAKE = "glados"
+VOICE_MODEL ="conversations\GLaDOS\pipermodel\glados.onnx"
+ASR_MODEL = "ggml-large-32-2.en.bin"
+VAD_MODEL = "silero_vad.onnx"
+LLM_STOP_SEQUENCE = "<|eot_id|>"  
+# End of sentence token for Meta-Llama-3
+PAUSE_TIME = 0.05  
+# Time to wait between processing loops
+SAMPLE_RATE = 16000  
+# Sample rate for input stream
+VAD_SIZE = 50  
+# Milliseconds of sample for Voice Activity Detection (VAD)
+VAD_THRESHOLD = 0.9  
+# Threshold for VAD detection
+BUFFER_SIZE = 600  
+# Milliseconds of buffer before VAD detection
+PAUSE_LIMIT = 400  
+# Milliseconds of pause allowed before processing
+SIMILARITY_THRESHOLD = 2  
+# Threshold for wake word similarity
 
 # Configuração de logging com nível de DEBUG para rastreamento detalhado
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class Queues:
     def __init__(self, kokoro: Kokoro, 
-                 youtube: YoutubeAPI,
+                 #youtube: YoutubeAPI,
                  your_name,
                  personality,
                  character,
@@ -30,13 +74,25 @@ class Queues:
             character (str): Nome do personagem para interações.
             debug (bool): Flag para controle de mensagens de depuração (default: False).
         """
+
+                # Inicializa todas as filas para diferentes propósitos
+        self.retrieve_comments_queue = Queue()
+        self.gpt_generation_queue = Queue()
+        self.tts_generation_queue = Queue()
+        self._vad_model = vad.VAD(model_path=str(Path.cwd() / "models" / VAD_MODEL))
+        # Inicializa eventos e travas para controle de fluxo
+        self.gpt_generated = threading.Event()
+        self.tts_generated = threading.Event()
+        self.end_received = threading.Event()
+
         # Atributos principais
         self.kokoro = kokoro
-        self.youtube = youtube
+        #self.youtube = youtube
         self.your_name = your_name
         self.personality = personality
         self.character = character
         self.debug = debug  # Variável de controle de depuração
+        #self.stt_recognition()
 
         # Limpa mensagens anteriores, se houver
         if self.kokoro.messages:
@@ -56,25 +112,6 @@ class Queues:
             logging.error(f"Error loading personality prompt: {e}")
             self.prompt = ""
 
-        # Inicializa todas as filas para diferentes propósitos
-        self.retrieve_comments_queue = Queue()
-        self.gpt_generation_queue = Queue()
-        self.separate_sentence_queue = Queue()
-        self.stt_recognition_queue = Queue()
-        self.tts_generation_queue = Queue()
-        self.read_audio_queue = Queue()
-        self.PrintResponse_queue = Queue()
-
-        # Inicializa eventos e travas para controle de fluxo
-        self.gpt_generated = threading.Event()
-        self.sentences_separated = threading.Event()
-        self.stt_recognized = threading.Event()
-        self.tts_generated = threading.Event()
-        self.audio_read = threading.Event()
-        self.playing_audio = threading.Event()
-        self.audio_lock = threading.Lock()
-        self.end_received = threading.Event()
-
     def run(self):
         """Inicia todas as threads necessárias para o processamento em paralelo."""
         self._log_info("Starting up!")  # Utiliza o método de log que respeita o modo de depuração
@@ -82,13 +119,9 @@ class Queues:
         # Lista de funções para executar em threads separadas
         for func in [
             self.gpt_generation, 
-            self.separate_sentence, 
+            self.tts_generation,
             self.stt_recognition,
-            self.tts_generation, 
             self.handle_personal_input,
-            #self.handle_personal_audio,
-            self.PrintResponse,
-            self.read_audio,
         ]:
             t = threading.Thread(target=self.thread_wrapper, args=(func,))
             t.start()
@@ -114,29 +147,6 @@ class Queues:
         if self.debug:
             logging.info(message)
 
-    def handle_personal_audio(self, timeout=10):
-        """Lida com o input de áudio do usuário quando a tecla 'espaço' é pressionada."""
-        while not self.end_received.is_set():
-            try:
-                # Check for the key press event here
-                if keyboard.is_pressed('space'):  # Example of checking a key press
-                    self._log_info("Listening for voice input...")
-                    audio = self.kokoro.listen_for_voice(timeout)  # Calls the listen_for_voice method
-                    
-                    if audio:
-                        self._log_info("Audio detected")
-                        self.stt_recognition_queue.put(audio)  # Puts the audio in the queue for further processing
-                    else:
-                        logging.warning("No audio detected or timeout occurred")
-                    
-                    time.sleep(0.3)  # Small delay to prevent high CPU usage
-
-                time.sleep(0.1)  # Additional delay to prevent high CPU usage and check again
-
-            except Exception as e:
-                logging.error(f"Error in handle_personal_audio: {e}")
-
-
     def handle_personal_input(self):
         """Lida com o input textual do usuário e comandos especiais ('save', 'exit')."""
         while not self.end_received.is_set():
@@ -157,107 +167,96 @@ class Queues:
             except Exception as e:
                 logging.error(f"Error in handle_personal_input: {e}")
 
-    def retrieve_comments(self):
-        """Recupera comentários do YouTube e os envia para processamento de GPT."""
-        while not self.end_received.is_set():
-            try:
-                msg = self.youtube.msg_queue.get(timeout=5)
-                self._log_info("YouTube queue message received")
-                complete_message = f"{msg.author.name} said: {msg.message}"
-                self.gpt_generation_queue.put(complete_message)
-            except Empty:
-                continue
-            except Exception as e:
-                logging.error(f"Error in retrieve_comments: {e}")
-
     def stt_recognition(self):
-        """Realiza o reconhecimento de voz para texto e envia o texto para o processamento de GPT."""
-        while not self.end_received.is_set():
-            try:
-                audio = self.stt_recognition_queue.get(timeout=5)
-                self._log_info("STT queue message received")
-                stt = self.kokoro.speech_recognition(audio)
-                self._log_info(f"STT result: {stt}")
-                self.gpt_generation_queue.put(stt)
-            except Empty:
-                continue
-            except Exception as e:
+        """
+        Starts the Glados voice assistant, continuously listening for input and responding.
+        """
+        try:
+                recognized_text = self.kokoro.listen_for_voice(timeout=5)
+                if recognized_text:
+                    logger.info(f"Recognized Text: {recognized_text}")
+                    self.gpt_generation_queue.put(recognized_text)
+        except Exception as e:
                 logging.error(f"Error in stt_recognition: {e}")
 
     def gpt_generation(self):
-        """Gera a resposta de GPT para uma mensagem do usuário."""
-        while not self.end_received.is_set():
-            if not self.gpt_generation_queue.empty():
-                self._log_info("LLM queue received")
-                userprompt = self.gpt_generation_queue.get()
-                response = self.kokoro.query_rag(template=self.prompt, userprompt=userprompt)
-                self.kokoro.messages.append({'role': self.your_name, 'content': userprompt})
-                self.kokoro.messages.append({'role': self.character, 'content': response})
-                self.separate_sentence_queue.put(response)
+        """
+        Processes the detected text using the LLM model.
 
-    def separate_sentence(self):
-        """Separa a resposta gerada pelo GPT em sentenças e as envia para geração de TTS."""
+        """
         while not self.end_received.is_set():
             try:
-                gpt_response = self.separate_sentence_queue.get(timeout=1)
-                self._log_info("Filter sentence queue message received")
-                sentences = self.kokoro.filter(gpt_response)
-                
-                # Inicializa o contador para reiniciá-lo a cada nova resposta
-                counter = 0
-                
-                for sentence in sentences:
-                    counter += 1  # Incrementa o contador para cada sentença
-                    temp_filename = f"temp_audio_{counter}.wav"  # Nomeia o arquivo temporário usando o contador
-                    self.tts_generation_queue.put((sentence, temp_filename))  # Envia para a fila de TTS
-            except Empty:
-                continue
-            except Exception as e:
-                logging.error(f"Error in separate_sentence: {e}")
+                detected_text = self.gpt_generation_queue.get(timeout=0.1)
+                response = self.kokoro.query_rag(template=self.prompt, userprompt=detected_text)
+                globals.processing = True
+                globals.currently_speaking = True
+                self.kokoro.messages.append({'role': self.your_name, 'content': detected_text})
+                if response != None:
+                    self.tts_generation_queue.put(response)
+            except queue.Empty:
+                time.sleep(PAUSE_TIME)
 
     def tts_generation(self):
-        """Gera o áudio para cada sentença e o salva com um nome de arquivo temporário."""
+        """
+        Processes the LLM generated text using the TTS model.
+
+        Runs in a separate thread to allow for continuous processing of the LLM output.
+        """
+        assistant_text = (
+            []
+        )  # The text generated by the assistant, to be spoken by the TTS
+        system_text = (
+            []
+        )  # The text logged to the system prompt when the TTS is interrupted
+        finished = False  # a flag to indicate when the TTS has finished speaking
+        globals.interrupted = (
+            False  # a flag to indicate when the TTS was interrupted by new input
+        )
+
         while not self.end_received.is_set():
             try:
-                sentence, temp_filename = self.tts_generation_queue.get(timeout=1)
-                self._log_info("TTS generation queue message received")
-                
-                # Gera o áudio usando o TTS
-                tts_path = self.kokoro.generate_voice(sentence, temp_filename)
-                # Adiciona na fila de leitura de áudio
-                self.PrintResponse_queue.put(sentence)
-                self.read_audio_queue.put(tts_path)
-            except Empty:
-                continue
-            except Exception as e:
-                logging.error(f"Error in tts_generation: {e}")
+                generated_text = self.tts_generation_queue.get(timeout=PAUSE_TIME)
 
+                if (
+                    generated_text == "<EOS>"
+                ):  # End of stream token generated in process_LLM_thread
+                    finished = True
+                elif not generated_text:
+                    self._log_info("Empty string sent to TTS")  # should not happen!
+                else:
+                    self._log_info(f"TTS text: {generated_text}")
+                    audio, rate = self.kokoro.generate_voice(generated_text)
+                    total_samples = len(audio)
 
-    def PrintResponse(self):
-        """Imprime a resposta na tela a partir da fila de respostas."""
-        while not self.end_received.is_set():
-            try:
-                printresponse = self.PrintResponse_queue.get(timeout=1)
-                self._log_info("Print response queue message received")  # Usa o método auxiliar de logging
-                print(Style.BRIGHT + Fore.LIGHTCYAN_EX, "\n", self.personality, ":", printresponse)
-            except Empty:
-                continue
-            except Exception as e:
-                logging.error(f"Error in PrintResponse: {e}")
+                    if total_samples and rate:
+                        sd.play(audio, rate)
 
+                        percentage_played = percentage_played_audio(
+                            total_samples,
+                            rate
+                        )
+                        if globals.interrupted:
+                            self.tts_generation_queue = queue.Queue()
+                            clipped_text = clip_interrupted_sentence(
+                                generated_text, percentage_played
+                            )
+                            self._log_info(
+                                f"TTS interrupted at {percentage_played}%: {clipped_text}"
+                            )
+                            system_text = copy.deepcopy(assistant_text)
+                            system_text.append(clipped_text)
+                            finished = True
+                        assistant_text.append(generated_text)
+                if finished:
+                    self.kokoro.messages.append({"role": self.character, "content": " ".join(assistant_text)})
+                    if globals.interrupted:
+                         self.kokoro.messages.append({
+                                 "role": "system",
+                                 "content": f"USER INTERRUPTED GLADOS, TEXT DELIVERED: {' '.join(system_text)}",})
+                    assistant_text = []
+                    finished = False
+                    globals.interrupted = False
+                    globals.currently_speaking = False
 
-    def read_audio(self):
-        """Lê e reproduz o áudio a partir da fila de leitura de áudio."""
-        while not self.end_received.is_set():
-            try:
-                tts_path = self.read_audio_queue.get(timeout=1)
-                self._log_info("Read audio queue message received")  # Usa o método auxiliar de logging
-                with self.audio_lock:  # Bloqueia o áudio
-                    play_audio(tts_path)
-                self.audio_read.set()  # Libera o evento de áudio
-            except Empty:
-                continue
-            except Exception as e:
-                logging.error(f"Error in read_audio: {e}")
-
-
+            except queue.Empty:
+                pass

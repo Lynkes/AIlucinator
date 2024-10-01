@@ -54,6 +54,9 @@ class TTSBase:
         elif provider_name == 'mspyttsx3':
             from .mspyttsx3 import Pyttsx3TTS
             return Pyttsx3TTS()
+        elif provider_name == 'onnxruntimetts':
+            from .onnxruntimetts import OnnxTTS
+            return OnnxTTS(model_path='conversations\\GLaDOS\\pipermodel\\glados.onnx', use_cuda=False, speaker_id=0)
         else:
             raise ValueError(f"Unknown TTS provider: {provider_name}")
 

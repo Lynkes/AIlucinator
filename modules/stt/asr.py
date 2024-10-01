@@ -5,7 +5,7 @@ from loguru import logger
 
 from . import whisper_cpp_wrapper
 
-LANG = "en"
+LANG = "pt"
 WORD_LEVEL_TIMINGS = False
 BEAM_SEARCH = True
 

@@ -9,8 +9,10 @@ from loguru import logger
 import time
 import globals
 import threading
+from faster_whisper import WhisperModel
+from colorama import *
+import io
 
-from . import asr
 from .vad import VAD
 
 # Using pathlib for OS-independent paths models
@@ -27,10 +29,12 @@ SIMILARITY_THRESHOLD = 2  # Threshold for wake word similarity
 
 
 class VoiceRecognition:
-    def __init__(self, wake_word: str | None = None):
+    def __init__(self, model_size_or_path="large-v2", device="cuda", compute_type="float16", wake_word: str | None = None):
         """
         Initializes the VoiceRecognition class, setting up necessary models, streams, and queues.
         """
+        self.model = WhisperModel(model_size_or_path=model_size_or_path, device=device, compute_type=compute_type, download_root="models")
+
 
         self.wake_word = wake_word
         # Initialize sample queues and state flags
@@ -53,7 +57,6 @@ class VoiceRecognition:
             blocksize=int(SAMPLE_RATE * VAD_SIZE / 1000),
         )
         self.vad_model = VAD(model_path=str(Path.cwd() / "models" / VAD_MODEL_PATH))
-        self.asr_model = asr.ASR(model=str(Path.cwd() / "models" / ASR_MODEL_PATH))
         
 
     def audio_callback(self, indata: np.ndarray, frames: int, time: Any, status: CallbackFlags):
@@ -174,8 +177,22 @@ class VoiceRecognition:
             str: Recognized speech text.
         """
         audio = np.concatenate(samples)
-        detected_text = self.asr_model.transcribe(audio)
+        detected_text = self.recognize_speech(audio)
         return detected_text
+    
+    def recognize_speech(self, audio):
+        response = ""
+        #audio_data = io.BytesIO(audio.get_wav_data())
+        segments, info = self.model.transcribe(audio, vad_filter=False, beam_size=5)
+        print(f"Detected language '{info.language}' with probability {info.language_probability}")
+        for segment in segments:
+            response += segment.text
+        if "en" in info.language or "pt" in info.language and info.language_probability >= 0.66560546875:
+            print(Style.BRIGHT + Fore.YELLOW + "\nYou said: " + Fore.WHITE, response)  # Checking
+            return response
+        else:
+            print(Style.BRIGHT + Fore.RED + "\nFalse input?")
+        return None
 
     def reset(self):
         """
