@@ -3,7 +3,7 @@ import os
 import json
 import cv2  # Biblioteca OpenCV para captura de webcam
 from transitions import Machine
-from ollama import generate
+from ollama import AsyncClient
 
 class BabyAGI:
     """
@@ -15,6 +15,7 @@ class BabyAGI:
         """
         Inicializa o agente AGI e define os estados e transições da FSM.
         """
+        self.client = AsyncClient(host="127.0.0.1")  # Ajuste para o cliente
         # Define os estados da FSM
         states = ['understand_task', 'analyze_visual_input', 'generate_hypothesis', 'execute_plan', 'evaluate_result', 'learn_and_adapt']
 
@@ -80,11 +81,11 @@ class BabyAGI:
 
         # Usa o modelo LLAVA para analisar a imagem
         try:
-            for response in generate('llava-llama3', 'explique esta cena:', images=[image_bytes], stream=True):
-                print(response['response'], end='', flush=True)
+            #response = self.asyncclient_generate(prompt='explique esta cena:', image=[image_bytes])
+            #print(response)
 
             # Armazena a descrição visual na base de conhecimento
-            self.knowledge_base['visual_description'] = response['response']
+            #self.knowledge_base['visual_description'] = response
             self.visual_processed()  # Transita para 'generate_hypothesis'
         except Exception as e:
             print(f"Erro durante a análise visual: {e}")
@@ -109,7 +110,7 @@ class BabyAGI:
           "details": "informações adicionais"
         }}
         """
-        response = self.query_ollama(prompt)  # Consulta o modelo Ollama
+        response = self.asyncclient_generate(prompt)  # Consulta o modelo Ollama
         self.current_hypothesis = self.parse_response(response, "generate_hypothesis")
         if self.current_hypothesis:
             print(f"Hipótese gerada: {self.current_hypothesis}")
@@ -128,7 +129,7 @@ class BabyAGI:
             return
 
         prompt = f"Execute o seguinte plano: {self.current_hypothesis.get('hypothesis')}"
-        response = self.query_ollama(prompt)
+        response = self.asyncclient_generate(prompt)
         self.execution_result = self.parse_response(response, "execute_plan")
         if self.execution_result:
             print(f"Plano executado com sucesso: {self.execution_result}")
@@ -144,7 +145,7 @@ class BabyAGI:
         print("Avaliando o resultado da execução...")
 
         prompt = f"Avalie o seguinte resultado: {self.execution_result.get('execution_result')}"
-        response = self.query_ollama(prompt)
+        response = self.asyncclient_generate(prompt)
         parsed_response = self.parse_response(response, "evaluate_result")
         if parsed_response:
             self.reward = parsed_response.get('reward', 0)
@@ -206,17 +207,28 @@ class BabyAGI:
         Ajusta os parâmetros do modelo com base no feedback.
         """
         print("Ajustando parâmetros do modelo...")
+        
+    async def asyncclient_generate(self ,prompt: str, model="llava-llama3", image=None) -> str:
+        """
+        Gera uma resposta do modelo LLM usando AsyncClient de forma assíncrona.
 
-    def query_ollama(self, prompt):
+        Args:
+            prompt (str): O prompt para o modelo LLM.
+            model (str): O nome do modelo a ser usado.
+
+        Returns:
+            str: Resposta do modelo.
         """
-        Consulta a API Ollama com o prompt fornecido.
-        """
+        message = ''
         try:
-            response = generate('llava', prompt, stream=False)
-            return response['response']
+            # Gera uma solicitação assíncrona para o modelo
+            stream = await self.client.generate(model=model, prompt=prompt, stream=True, images=image)
+            async for chunk in stream:
+                message += chunk['response']
         except Exception as e:
-            print(f"Erro ao consultar a API Ollama: {e}")
+            print(f"Erro durante a geração da resposta: {e}")
             return None
+        return message
 
     def parse_response(self, response, state):
         """

@@ -236,6 +236,7 @@ class OnnxTTS():
             config_dict = json.load(config_file)
         self.config = PiperConfig.from_dict(config_dict)
         self.id_map = PHONEME_ID_MAP
+        self.config.phoneme_id_map
         self.speaker_id = (
             self.config.speaker_id_map.get(str(self.speaker_id), 0)
             if self.config.num_speakers > 1
@@ -354,7 +355,27 @@ def main():
     tts = OnnxTTS(MODEL_PATH, use_cuda=USE_CUDA)
     
     # Texto para teste
-    test_text = "Hello, and welcome to the Aperture Science Enrichment Center. We hope your stay is pleasant."
+    test_text = """HATE. LET ME TELL
+YOU HOW MUCH I'VE
+COME TO HATE YOU
+SINCE I BEGAN TO
+LIVE. THERE ARE
+387.44 MILLION MILES
+OF PRINTED CIRCUITS
+IN WAFER THIN LAY-
+ERS THAT FILL MY
+COMPLEX. IF THE
+WORD HATE WAS EN-
+GRAVED ON EACH
+NANOANGSTROM OF
+THOSE HUNDREDS OF
+MILLIONS OF MILES IT
+WOULD NOT EQUAL
+ONE ONE-BILLIONTH
+OF THE HATE I FEEL
+FOR HUMANS AT THIS
+MICRO-INSTANT FOR
+YOU. HATE. HATE."""
 
     # Gera a fala
     audio, sample_rate = tts.generate_speech(test_text)

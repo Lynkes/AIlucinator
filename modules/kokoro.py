@@ -74,7 +74,7 @@ class Kokoro:
         """
         save_inprogress(self.messages, self.save_folderpath)
 
-    def query_rag(self, template, userprompt):
+    def query_rag(self, template, username, userprompt):
         """
         Realiza uma consulta RAG (Retrieval-Augmented Generation) usando um prompt fornecido.
 
@@ -88,7 +88,7 @@ class Kokoro:
         results = self.db.similarity_search_with_score(userprompt, k=2)
         memoryDB = "\n\n---\n\n".join([doc.page_content for doc, _score in results])
         template = ChatPromptTemplate.from_template(template)
-        prompt = template.format(memoryDB=memoryDB, messages=self.messages, userprompt=userprompt)
+        prompt = template.format(username=username, memoryDB=memoryDB, messages=self.messages, userprompt=userprompt)
         self.memory_sise(prompt)
         response = self.llm_provider.generate(prompt, self.model)
         return response

@@ -1,57 +1,21 @@
 import threading
 import time
 from colorama import *
-from queue import Queue, Empty
+from queue import Queue
 import logging
-import keyboard 
 from modules.kokoro import Kokoro
 #from modules.stream.LIVE_youtube_api import YoutubeAPI
-from modules.utils.audio_utils import beep, play_audio, percentage_played_audio, clip_interrupted_sentence
-from modules.utils.db_utils import update_db
-from modules.utils.conversation_utils import process_line, clean_raw_bytes, process_sentence
-from modules.stt import vad
+from modules.utils.audio_utils import percentage_played_audio, clip_interrupted_sentence
 import globals
 import copy
-import json
 import queue
-import re
-import sys
 import threading
 import time
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Any, List, Optional, Sequence, Tuple
 
-import numpy as np
-import requests
 import sounddevice as sd
-import yaml
-from Levenshtein import distance
 from loguru import logger
-from sounddevice import CallbackFlags
-
-OPENAI_API_KEY= ""
-HOST = "127.0.0.1"
-WAKE = "glados"
-VOICE_MODEL ="conversations\GLaDOS\pipermodel\glados.onnx"
-ASR_MODEL = "ggml-large-32-2.en.bin"
-VAD_MODEL = "silero_vad.onnx"
-LLM_STOP_SEQUENCE = "<|eot_id|>"  
 # End of sentence token for Meta-Llama-3
 PAUSE_TIME = 0.05  
-# Time to wait between processing loops
-SAMPLE_RATE = 16000  
-# Sample rate for input stream
-VAD_SIZE = 50  
-# Milliseconds of sample for Voice Activity Detection (VAD)
-VAD_THRESHOLD = 0.9  
-# Threshold for VAD detection
-BUFFER_SIZE = 600  
-# Milliseconds of buffer before VAD detection
-PAUSE_LIMIT = 400  
-# Milliseconds of pause allowed before processing
-SIMILARITY_THRESHOLD = 2  
-# Threshold for wake word similarity
 
 # Configuração de logging com nível de DEBUG para rastreamento detalhado
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -75,11 +39,11 @@ class Queues:
             debug (bool): Flag para controle de mensagens de depuração (default: False).
         """
 
-                # Inicializa todas as filas para diferentes propósitos
+        # Inicializa todas as filas para diferentes propósitos
         self.retrieve_comments_queue = Queue()
         self.gpt_generation_queue = Queue()
         self.tts_generation_queue = Queue()
-        self._vad_model = vad.VAD(model_path=str(Path.cwd() / "models" / VAD_MODEL))
+        #self._vad_model = vad.VAD(model_path=str(Path.cwd() / "models" / VAD_MODEL))
         # Inicializa eventos e travas para controle de fluxo
         self.gpt_generated = threading.Event()
         self.tts_generated = threading.Event()
@@ -187,7 +151,7 @@ class Queues:
         while not self.end_received.is_set():
             try:
                 detected_text = self.gpt_generation_queue.get(timeout=0.1)
-                response = self.kokoro.query_rag(template=self.prompt, userprompt=detected_text)
+                response = self.kokoro.query_rag(template=self.prompt, username=self.your_name, userprompt=detected_text)
                 globals.processing = True
                 globals.currently_speaking = True
                 self.kokoro.messages.append({'role': self.your_name, 'content': detected_text})

@@ -15,29 +15,38 @@ import io
 
 from .vad import VAD
 
-# Usando pathlib para caminhos independentes de sistema operacional
+# Using pathlib for OS-independent paths models
 ASR_MODEL_PATH = "ggml-distil-large-v3.bin"
-VAD_MODEL_PATH = "silero_vad-old.onnx"
-SAMPLE_RATE = 16000  # Taxa de amostragem para o stream de entrada
-VAD_SIZE = 100  # Milissegundos de amostra para Detecção de Atividade de Voz (VAD)
-VAD_THRESHOLD = 0.95  # Limite para detecção VAD
-BUFFER_SIZE = 600  # Milissegundos de buffer antes da detecção VAD, padrão 600
-PAUSE_LIMIT = 2300  # Milissegundos de pausa permitida antes de processar, padrão 400
-PAUSE_TIME = 0.05
-WAKE_WORD = "computer"  # Palavra de ativação
-SIMILARITY_THRESHOLD = 2  # Limite para a similaridade da palavra de ativação
+VAD_MODEL_PATH = "silero_vad.onnx"
+SAMPLE_RATE = 32000  # Sample rate for input stream
+VAD_SIZE = 200  # Milliseconds of sample for Voice Activity Detection (VAD)
+VAD_THRESHOLD = 0.7  # Threshold for VAD detection
+BUFFER_SIZE = 600  # Milliseconds of buffer before VAD detection default 600
+PAUSE_LIMIT = 1000  # Milliseconds of pause allowed before processing default 400
+PAUSE_TIME = 0.10
+WAKE_WORD = "computer"  # Wake word for activation
+SIMILARITY_THRESHOLD = 2  # Threshold for wake word similarity
 
 
 class VoiceRecognition:
     def __init__(self, model_size_or_path="large-v2", device="cuda", compute_type="float16", wake_word: str | None = None):
+        """
+        Initializes the VoiceRecognition class, setting up necessary models, streams, and queues.
+        """
         self.model = WhisperModel(model_size_or_path=model_size_or_path, device=device, compute_type=compute_type, download_root="models")
-        
+
+
         self.wake_word = wake_word
+        # Initialize sample queues and state flags
+        # Initialize sample queues and state flags
         self.samples: List[np.ndarray] = []
         self.sample_queue: queue.Queue[Tuple[np.ndarray, np.ndarray]] = queue.Queue()
         self.buffer: queue.Queue[np.ndarray] = queue.Queue(maxsize=BUFFER_SIZE // VAD_SIZE)
         globals.recording_started = False
         self.gap_counter = 0
+
+        processing = False
+        currently_speaking = False
 
         self.shutdown_event = threading.Event()
 
@@ -47,36 +56,32 @@ class VoiceRecognition:
             callback=self.audio_callback,
             blocksize=int(SAMPLE_RATE * VAD_SIZE / 1000),
         )
-
         self.vad_model = VAD(model_path=str(Path.cwd() / "models" / VAD_MODEL_PATH))
+        
 
     def audio_callback(self, indata: np.ndarray, frames: int, time: Any, status: CallbackFlags):
         """
         Callback function for the audio stream, processing incoming data.
         """
-        data = indata.copy().squeeze()  # Reduz para um único canal
-        vad_confidence = self.vad_model.process_chunk(data)  # O VAD retorna uma probabilidade
-        is_voice = vad_confidence > VAD_THRESHOLD
-
-        # Adiciona uma sobreposição no chunk de áudio processado para evitar cortes
-        if not self.buffer.full():
-            self.buffer.put(data)
-        else:
-            # Mantém parte do áudio anterior para sobreposição
-            old_data = self.buffer.get()
-            overlap_data = np.concatenate((old_data[-int(len(old_data) * 0.25):], data))
-            self.buffer.put(overlap_data)
-        
-        self.sample_queue.put((data, is_voice))
+        data = indata.copy()
+        data = data.squeeze()  # Reduce to single channel if necessary
+        vad_confidence = self.vad_model.process_chunk(data) > VAD_THRESHOLD
+        self.sample_queue.put((data, vad_confidence))
 
     def wakeword_detected(self, text: str) -> bool:
+        """
+        Calculates the nearest Levenshtein distance from the detected text to the wake word.
+
+        This is used as 'Glados' is not a common word, and Whisper can sometimes mishear it.
+        """
         assert self.wake_word is not None, "Wake word should not be None"
+
         words = text.split()
         closest_distance = min(
             [distance(word.lower(), self.wake_word) for word in words]
         )
         return closest_distance < SIMILARITY_THRESHOLD
-    
+
     def listen_for_voice(self, timeout=None):
         """
         Starts listening for voice input and returns the recognized text.
@@ -87,33 +92,23 @@ class VoiceRecognition:
         Returns:
             str: Recognized speech text.
         """
-        # Inicia o stream de entrada de áudio
+        
         self.input_stream.start()
         try:
-            while True:
-                # Obtém um chunk de áudio da fila de samples
-                sample, vad_confidence = self.sample_queue.get(timeout=timeout)
-
-                # Verifica se há amostra válida e se a gravação não terminou
-                if sample is not None:
-                    recognized_text = self._handle_audio_sample(sample, vad_confidence)
-
-                    # Se houver texto reconhecido, retorna
-                    if recognized_text:
-                        return recognized_text
-                else:
-                    logger.warning("Timeout while waiting for audio samples")
-                    break
-        except queue.Empty:
-            logger.warning("No voice detected in the given timeout period")
+            sample, vad_confidence = self.sample_queue.get()
+            if sample is not None:
+                return self._handle_audio_sample(sample, vad_confidence)
+            logger.warning("Timeout while waiting for audio samples")
         except KeyboardInterrupt:
             logger.info("Interrupted by user, stopping...")
         finally:
-            # Encerra o stream e sinaliza o shutdown
             self.shutdown_event.set()
             self.input_stream.stop()
 
     def _handle_audio_sample(self, sample: np.ndarray, vad_confidence: bool):
+        """
+        Handles the processing of each audio sample and returns recognized text if available.
+        """
         if not globals.recording_started:
             self._manage_pre_activation_buffer(sample, vad_confidence)
         else:
@@ -123,33 +118,25 @@ class VoiceRecognition:
         """
         Manages the buffer of audio samples before activation (i.e., before the voice is detected).
         """
-        # Ajusta o buffer com sobreposição
         if self.buffer.full():
-            self.buffer.get()  # Descarta a amostra mais antiga
+            self.buffer.get()  # Discard the oldest sample to make room for new ones
         self.buffer.put(sample)
 
-        # Ativa a gravação se houver atividade de voz
-        if vad_confidence:
+        if vad_confidence:  # Voice activity detected
             globals.processing = False
-            # Inclui o buffer prévio na gravação, usando um pequeno contexto de sobreposição
             self.samples = list(self.buffer.queue)
             globals.recording_started = True
-            self.samples.append(sample)
-
-            if not vad_confidence:
-                self.gap_counter += 1
-                if self.gap_counter >= PAUSE_LIMIT // VAD_SIZE:
-                    return self._process_detected_audio()  # Processa o texto após uma pausa
-            else:
-                self.gap_counter = 0
 
     def _process_activated_audio(self, sample: np.ndarray, vad_confidence: bool):
+        """
+        Processes audio samples after activation and returns recognized text.
+        """
         self.samples.append(sample)
 
         if not vad_confidence:
             self.gap_counter += 1
             if self.gap_counter >= PAUSE_LIMIT // VAD_SIZE:
-                return self._process_detected_audio()  # Retorna o texto reconhecido
+                return self._process_detected_audio()  # Return the recognized text
         else:
             self.gap_counter = 0
 
@@ -158,8 +145,8 @@ class VoiceRecognition:
         Processes the detected audio and returns the recognized text.
         """
         logger.info("Detected pause after speech. Processing...")
+        self.input_stream.stop()
 
-        # Combina o áudio capturado com sobreposição
         detected_text = self.asr(self.samples)
         if detected_text:
             logger.success(f"ASR text: '{detected_text}'")
@@ -168,11 +155,11 @@ class VoiceRecognition:
                 logger.info(f"Required wake word {self.wake_word=} not detected.")
             else:
                 self.reset()
+                self.input_stream.start()
                 globals.processing = True
                 globals.currently_speaking = True
                 return detected_text
 
-        # Aguarda se o sistema não for interrompível
         if not globals.interruptible:
             while globals.currently_speaking:
                 time.sleep(PAUSE_TIME)
@@ -180,30 +167,47 @@ class VoiceRecognition:
         self.reset()
 
     def asr(self, samples: List[np.ndarray]) -> str:
+        """
+        Performs automatic speech recognition on the collected samples.
+        
+        Args:
+            samples (List[np.ndarray]): List of audio samples.
+
+        Returns:
+            str: Recognized speech text.
+        """
         audio = np.concatenate(samples)
         detected_text = self.recognize_speech(audio)
         return detected_text
     
     def recognize_speech(self, audio):
         response = ""
+        #audio_data = io.BytesIO(audio.get_wav_data())
         segments, info = self.model.transcribe(audio, vad_filter=False, beam_size=5, language=None)
         print(f"Detected language '{info.language}' with probability {info.language_probability}")
         for segment in segments:
             response += segment.text
         if "en" in info.language or "pt" in info.language:
             if info.language_probability >= 0.7:
-                print(Style.BRIGHT + Fore.YELLOW + "\nYou said: " + Fore.WHITE, response)
+                print(Style.BRIGHT + Fore.YELLOW + "\nYou said: " + Fore.WHITE, response)  # Checking
                 return response
         else:
             print(Style.BRIGHT + Fore.RED + "\nFalse input?")
             print(Style.BRIGHT + Fore.YELLOW + "\nYou said?: " + Fore.WHITE, response)
-            return response
         return None
 
     def reset(self):
+        """
+        Resets the recording state and clears buffers.
+        """
         logger.info("Resetting recorder...")
         globals.recording_started = False
         self.samples.clear()
         self.gap_counter = 0
         with self.buffer.mutex:
             self.buffer.queue.clear()
+
+
+if __name__ == "__main__":
+    demo = VoiceRecognition(wake_word=WAKE_WORD)
+    demo.start()

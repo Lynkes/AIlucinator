@@ -66,7 +66,7 @@ class STTBase:
             return VoiceRecognition()
         elif provider_name == 'voice_recognition_Fwhisper':
             from .voice_recognition_Fwhisper import VoiceRecognition
-            return VoiceRecognition(model_size_or_path=model_size, device=device, compute_type=compute_type)
+            return VoiceRecognition(model_size_or_path=model_size, device=device, compute_type=compute_type, wake_word="Glados")
         else:
             raise ValueError(f"Unknown STT provider: {provider_name}")
         

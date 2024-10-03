@@ -9,12 +9,13 @@ import ollama
 from colorama import *
 from ollama import AsyncClient, Client
 LLAMA3_TEMPLATE = "{% set loop_messages = messages %}{% for message in loop_messages %}{% set content = '<|start_header_id|>' + message['role'] + '<|end_header_id|>\n\n'+ message['content'] | trim + '<|eot_id|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{% if add_generation_prompt %}{{ '<|start_header_id|>assistant<|end_header_id|>\n\n' }}{% endif %}"
+OPENAI_API_KEY= ""
 
 class INSTRUCT(LLMBase):
     client=Client(host="127.0.0.1")
     template = Template(LLAMA3_TEMPLATE)
     completion_url = "http://127.0.0.1:11434/api/generate"
-    prompt_headers = {"Authorization": "OPENAI_API_KEY" or "Bearer your_api_key_here"}
+    prompt_headers = {"Authorization": OPENAI_API_KEY or "Bearer your_api_key_here"}
 
     def generate(self, prompt, model):
         self.messages = [
