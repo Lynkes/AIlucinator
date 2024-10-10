@@ -20,7 +20,7 @@ REM del cudart-llama-bin-win-cu12.2.0-x64.zip
 REM del llama-bin-win-cuda-cu12.2.0-x64.zip
 
 REM Download ASR and LLM Models
-echo Downloading Models...
+echo Downloading Models... https://huggingface.co/ggerganov/whisper.cpp/tree/main
 REM https://huggingface.co/distil-whisper/distil-medium.en/resolve/main/ggml-medium-32-2.en.bin
 REM https://huggingface.co/distil-whisper/distil-large-v3-ggml/resolve/main/ggml-distil-large-v3.fp32.bin
 curl -L "https://huggingface.co/distil-whisper/distil-large-v3-ggml/resolve/main/ggml-distil-large-v3.fp32.bin" --output  "models\ggml-distil-large-v3.fp32.bin"

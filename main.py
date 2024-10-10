@@ -47,6 +47,7 @@ if __name__ == "__main__":
     PERSONALITY = os.environ['PERSONALITY']
     YOUR_NAME = os.getlogin()
     LLMMODEL = os.environ['LLMMODEL']
+    HOST = os.environ['HOST']
     LLM = os.environ['LLM']
     STT = os.environ['STT']
     TTS = os.environ['TTS']
@@ -60,6 +61,7 @@ if __name__ == "__main__":
     DEBUG = os.environ['DEBUG']
     SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
     PERSONALITY = SCRIPT_DIR + '/' + 'conversations/' + PERSONALITY
+    WAKE_WORD = os.environ['WAKE_WORD']
     # print("PERSONALITY=",PERSONALITY)
     model_params = {
         "MODEL_SIZE": MODEL_SIZE,
@@ -69,6 +71,7 @@ if __name__ == "__main__":
     kokoro = Kokoro(
         save_folderpath=PERSONALITY, 
         device_index=None, \
+        host=HOST,
         llm=LLM, 
         tts=TTS, 
         stt=STT, 
@@ -77,6 +80,7 @@ if __name__ == "__main__":
         model_size=MODEL_SIZE, 
         model_device=MODEL_DEVICE,
         compute_type=MODEL_COMPUTE_TYPE,
+        wake_word=WAKE_WORD,
     )
 
     #youtube = ""  # Placeholder para futura integração com API do YouTube

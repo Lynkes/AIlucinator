@@ -2,12 +2,11 @@ from modules.llm.llm_base import LLMBase
 import ollama
 from colorama import *
 from ollama import AsyncClient, Client
-
+        
 class OllamaLLM(LLMBase):
-
-    client=Client(host="127.0.0.1")
-    asyncclient=AsyncClient(host="127.0.0.1")
-
+    def __init__(self, host):
+        self.client=Client(host=host)
+        self.asyncclient=AsyncClient(host=host)
 
     def generate(self, prompt, model):
         message = ''

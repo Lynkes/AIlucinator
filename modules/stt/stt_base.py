@@ -36,7 +36,7 @@ class STTBase:
     """
 
     @staticmethod
-    def get_stt_provider(provider_name, model_size=None, device=None, compute_type=None):
+    def get_stt_provider(provider_name, model_size=None, device=None, compute_type=None, wake_word=None):
         """
         Método estático que retorna uma instância do provedor STT com base no nome fornecido.
 
@@ -63,13 +63,13 @@ class STTBase:
             return WhisperSTT(model_size_or_path=model_size, device=device, compute_type=compute_type) 
         elif provider_name == 'voice_recognition':
             from .voice_recognition import VoiceRecognition
-            return VoiceRecognition(model_size_or_path=model_size, device=device, compute_type=compute_type, wake_word="hey")
+            return VoiceRecognition(model_size_or_path=model_size, device=device, compute_type=compute_type, wake_word=wake_word)
         elif provider_name == 'voice_recognition_Fwhisper': 
             from .voice_recognition_Fwhisper import VoiceRecognition
-            return VoiceRecognition(model_size_or_path=model_size, device=device, compute_type=compute_type, wake_word="hey")
+            return VoiceRecognition(model_size_or_path=model_size, device=device, compute_type=compute_type, wake_word=wake_word)
         elif provider_name == 'voice_recognition_CPP_bufer_ring':
             from .voice_recognition_CPP_bufer_ring import VoiceRecognition
-            return VoiceRecognition(model_size_or_path=model_size, device=device, compute_type=compute_type, wake_word="hey")
+            return VoiceRecognition(model_size_or_path=model_size, device=device, compute_type=compute_type, wake_word=wake_word)
         else:
             raise ValueError(f"Unknown STT provider: {provider_name}")
         

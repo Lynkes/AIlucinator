@@ -29,7 +29,8 @@ class Kokoro:
     
     def __init__(self, 
                  save_folderpath='conversations/GLaDOS/', 
-                 device_index=None, 
+                 device_index=None,
+                 host=None, 
                  llm='ollama', 
                  tts='vits2', 
                  stt='whisper', 
@@ -37,7 +38,8 @@ class Kokoro:
                  LLMMODEL="gpt-3.5-turbo", 
                  model_size="large-v2", 
                  model_device="cuda",
-                 compute_type="float16"
+                 compute_type="float16",
+                 wake_word=None,
                  ):
         """
         Inicializa a classe Kokoro com os parâmetros fornecidos.
@@ -56,9 +58,9 @@ class Kokoro:
         """
         self.save_folderpath = save_folderpath
         self.model = LLMMODEL
-        self.llm_provider = LLMBase.get_llm_provider(llm)
+        self.llm_provider = LLMBase.get_llm_provider(llm, host)
         self.tts_provider = TTSBase.get_tts_provider(tts)
-        self.stt_provider = STTBase.get_stt_provider(stt, model_size, model_device, compute_type)
+        self.stt_provider = STTBase.get_stt_provider(stt, model_size, model_device, compute_type, wake_word)
         self.stt = stt
 
         # Inicializa o banco de dados

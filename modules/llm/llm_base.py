@@ -27,7 +27,7 @@ class LLMBase:
     """
 
     @staticmethod
-    def get_llm_provider(provider_name):
+    def get_llm_provider(provider_name, host= None):
         """
         Método estático que retorna uma instância do provedor LLM com base no nome fornecido.
 
@@ -51,7 +51,7 @@ class LLMBase:
             return OllamaLLM()
         elif provider_name == 'INSTRUCT':
             from .instruct_request import INSTRUCT
-            return INSTRUCT()
+            return INSTRUCT(host=host)
         else:
             raise ValueError(f"Unknown LLM provider: {provider_name}")
 
