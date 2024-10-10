@@ -1,0 +1,69 @@
+# Python
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.env
+*.venv
+ENV/
+env/
+venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Diretórios de pacotes
+site/
+.local/
+
+# Logs e relatórios
+*.log
+*.out
+*.txt
+*.csv
+
+# Configurações de IDE e ambiente de desenvolvimento
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Arquivos temporários e backups do sistema
+*.swp
+*.swo
+*.tmp
+*.bak
+
+# Modelos de Machine Learning
+models/
+submodules/
+conversations/GLaDOS/chroma/
+*.onnx
+*.bin
+
+# Arquivos de cache e histórico de terminal
+.history
+.cache
+*.mypy_cache
+pytest_cache/
+
+# Arquivos de wheel
+*.whl
+
+# Configuração de Docker e containers
+*.dockerignore
+Dockerfile
+
+# Arquivos do sistema operacional
+.DS_Store
+Thumbs.db
+*.dll
+*.zip
+*.7z
+
+# Notebooks Jupyter e checkpoints
+.ipynb_checkpoints/
+
+# Arquivos de virtual environment
+.env/
+.venv/
+venv/

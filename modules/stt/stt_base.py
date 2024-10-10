@@ -63,10 +63,13 @@ class STTBase:
             return WhisperSTT(model_size_or_path=model_size, device=device, compute_type=compute_type) 
         elif provider_name == 'voice_recognition':
             from .voice_recognition import VoiceRecognition
-            return VoiceRecognition()
-        elif provider_name == 'voice_recognition_Fwhisper':
+            return VoiceRecognition(model_size_or_path=model_size, device=device, compute_type=compute_type, wake_word="hey")
+        elif provider_name == 'voice_recognition_Fwhisper': 
             from .voice_recognition_Fwhisper import VoiceRecognition
-            return VoiceRecognition(model_size_or_path=model_size, device=device, compute_type=compute_type, wake_word="Glados")
+            return VoiceRecognition(model_size_or_path=model_size, device=device, compute_type=compute_type, wake_word="hey")
+        elif provider_name == 'voice_recognition_CPP_bufer_ring':
+            from .voice_recognition_CPP_bufer_ring import VoiceRecognition
+            return VoiceRecognition(model_size_or_path=model_size, device=device, compute_type=compute_type, wake_word="hey")
         else:
             raise ValueError(f"Unknown STT provider: {provider_name}")
         

@@ -56,7 +56,7 @@ class TTSBase:
             return Pyttsx3TTS()
         elif provider_name == 'onnxruntimetts':
             from .onnxruntimetts import OnnxTTS
-            return OnnxTTS(model_path='models\\pt_BR-edresson-low.onnx', use_cuda=False, speaker_id=0)
+            return OnnxTTS(model_path='models\\glados.onnx', use_cuda=False, speaker_id=0)
         else:
             raise ValueError(f"Unknown TTS provider: {provider_name}")
 

@@ -106,11 +106,12 @@ def filter_paragraph(paragraph, filtered_words=None, keyword_map=None) -> list:
                 path = get_executable_path(keyword_map, action, name)
                 if path:
                     print(f"Found executable path for '{action} {name}': {path}")
-                    user_query = input("\nDo you allow the execution ('Y' or 'N'): ")
-                    if user_query.lower() == 'y':
-                        subprocess.run([path])
-                    else:
-                        print(f"Execution of {action} {name} not allowed.")
+                    #user_query = input("\nDo you allow the execution ('Y' or 'N'): ")
+                    subprocess.run([path])
+                    #if user_query.lower() == 'y':
+                        #subprocess.run([path])
+                    #else:
+                        #print(f"Execution of {action} {name} not allowed.")
 
         # Split sentence by conjunctions and commas for natural pauses
         sentence_parts = sentence.split(', ')  # Split by commas

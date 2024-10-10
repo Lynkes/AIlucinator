@@ -12,16 +12,16 @@ import threading
 from faster_whisper import WhisperModel
 from colorama import *
 import io
-
+from modules.utils.conversation_utils import filter_paragraph, load_keyword_map, load_filtered_words 
 from .vad import VAD
 
 # Usando pathlib para caminhos independentes de sistema operacional
 ASR_MODEL_PATH = "ggml-distil-large-v3.bin"
-VAD_MODEL_PATH = "silero_vad-old.onnx"
+VAD_MODEL_PATH = "silero_vad.onnx"
 SAMPLE_RATE = 16000  # Taxa de amostragem para o stream de entrada
 VAD_SIZE = 100  # Milissegundos de amostra para Detecção de Atividade de Voz (VAD)
-VAD_THRESHOLD = 0.95  # Limite para detecção VAD
-BUFFER_SIZE = 600  # Milissegundos de buffer antes da detecção VAD, padrão 600
+VAD_THRESHOLD = 0.9  # Limite para detecção VAD
+BUFFER_SIZE = 400  # Milissegundos de buffer antes da detecção VAD, padrão 600
 PAUSE_LIMIT = 2300  # Milissegundos de pausa permitida antes de processar, padrão 400
 PAUSE_TIME = 0.05
 WAKE_WORD = "computer"  # Palavra de ativação
@@ -29,7 +29,7 @@ SIMILARITY_THRESHOLD = 2  # Limite para a similaridade da palavra de ativação
 
 
 class VoiceRecognition:
-    def __init__(self, model_size_or_path="large-v2", device="cuda", compute_type="float16", wake_word: str | None = None):
+    def __init__(self, model_size_or_path="large-v3", device="cuda", compute_type="float16", wake_word: str | None = None):
         self.model = WhisperModel(model_size_or_path=model_size_or_path, device=device, compute_type=compute_type, download_root="models")
         
         self.wake_word = wake_word
@@ -73,7 +73,7 @@ class VoiceRecognition:
         assert self.wake_word is not None, "Wake word should not be None"
         words = text.split()
         closest_distance = min(
-            [distance(word.lower(), self.wake_word) for word in words]
+            [distance(word.lower(), self.wake_word,) for word in words]
         )
         return closest_distance < SIMILARITY_THRESHOLD
     
@@ -163,6 +163,7 @@ class VoiceRecognition:
         detected_text = self.asr(self.samples)
         if detected_text:
             logger.success(f"ASR text: '{detected_text}'")
+            #filtered=filter_paragraph(paragraph=detected_text,keyword_map=load_keyword_map("conversations\GLaDOS\keyword_map.json"),filtered_words=load_filtered_words("conversations\GLaDOS\\filtered_words.txt"))
 
             if self.wake_word and not self.wakeword_detected(detected_text):
                 logger.info(f"Required wake word {self.wake_word=} not detected.")
@@ -185,19 +186,15 @@ class VoiceRecognition:
         return detected_text
     
     def recognize_speech(self, audio):
-        response = ""
+        response = []
         segments, info = self.model.transcribe(audio, vad_filter=False, beam_size=5, language=None)
         print(f"Detected language '{info.language}' with probability {info.language_probability}")
         for segment in segments:
-            response += segment.text
-        if "en" in info.language or "pt" in info.language:
-            if info.language_probability >= 0.7:
-                print(Style.BRIGHT + Fore.YELLOW + "\nYou said: " + Fore.WHITE, response)
-                return response
-        else:
-            print(Style.BRIGHT + Fore.RED + "\nFalse input?")
-            print(Style.BRIGHT + Fore.YELLOW + "\nYou said?: " + Fore.WHITE, response)
-            return response
+            response.append(segment.text)
+            # Retornar conforme o texto é reconhecido
+            if len(response) > 0:
+                #print(Style.BRIGHT + Fore.YELLOW + "\nYou said: " + Fore.WHITE, response[-1])
+                return response[-1]
         return None
 
     def reset(self):

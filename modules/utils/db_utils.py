@@ -34,7 +34,7 @@ def get_embedding_function(embedding_service: str):
         encode_kwargs = {'normalize_embeddings': False}
         return HuggingFaceEmbeddings(model_name=model_name, model_kwargs=model_kwargs, encode_kwargs=encode_kwargs)
     elif embedding_service == "ollama":
-        return OllamaEmbeddings(model="llama3.1")
+        return OllamaEmbeddings(model="llama3.2:3b-instruct-q8_0 ")
     elif embedding_service == "bedrock":
         return BedrockEmbeddings(credentials_profile_name="default", region_name="us-east-1")
     else:
