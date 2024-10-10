@@ -60,6 +60,7 @@ O sistema é composto pelos seguintes componentes principais:
       # Coloque sua chave da API OpenAI aqui, se aplicável
 
       # Provedor de Modelos de Linguagem (LLM)
+      HOST =127.0.0.1
       LLM=INSTRUCT  
       # Escolha entre ollama, openai
 
@@ -86,8 +87,11 @@ O sistema é composto pelos seguintes componentes principais:
       # Nome da Personalidade do Chatbot
       PERSONALITY=GLaDOS  
 
+      WAKE_WORD=GLaDOS
+
       # Nome do Usuário (opcional)
       YOUR_NAME=  
+
       # Coloque seu nome ou o nome do usuário, se necessário
 
       # Configuração do Modo Debug
@@ -107,6 +111,7 @@ O sistema é composto pelos seguintes componentes principais:
       #conversations\GLaDOS\pipermodel\glados.onnx
       #conversations\GLaDOS\pipermodel\glados.onnx.json
       #conversations\GLaDOS\pipermodel\silero_vad.onnx
+
    ```
 
 ## Estrutura do Projeto
