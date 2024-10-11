@@ -12,10 +12,9 @@ LLAMA3_TEMPLATE = "{% set loop_messages = messages %}{% for message in loop_mess
 OPENAI_API_KEY= ""
 
 class INSTRUCT(LLMBase):
-    client=Client(host="127.0.0.1")
-    template = Template(LLAMA3_TEMPLATE)
-    completion_url = "http://127.0.0.1:11434/api/generate"
-    prompt_headers = {"Authorization": OPENAI_API_KEY or "Bearer your_api_key_here"}
+    def __init__(self, host):
+        self.client=Client(host=host)
+        self.template = Template(LLAMA3_TEMPLATE)
 
     def generate(self, prompt, model):
         self.messages = [

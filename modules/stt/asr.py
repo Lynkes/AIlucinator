@@ -5,61 +5,8 @@ from . import whisper_cpp_wrapper
 
 WORD_LEVEL_TIMINGS = False
 BEAM_SEARCH = True
-
-# Mapeamento manual de IDs de linguagem para strings
-LANG_ID_TO_STRING = {
-    0: "English",
-    1: "Chinese",
-    2: "German",
-    3: "Spanish",
-    4: "Russian",
-    5: "Korean",
-    6: "French",
-    7: "Japanese",
-    8: "Portuguese",
-    9: "Turkish",
-    10: "Polish",
-    11: "Catalan",
-    12: "Dutch",
-    13: "Arabic",
-    14: "Swedish",
-    15: "Italian",
-    16: "Indonesian",
-    17: "Hindi",
-    18: "Finnish",
-    19: "Vietnamese",
-    20: "Hebrew",
-    21: "Ukrainian",
-    22: "Greek",
-    23: "Malay",
-    24: "Czech",
-    25: "Romanian",
-    26: "Danish",
-    27: "Hungarian",
-    28: "Tamil",
-    29: "Norwegian",
-    30: "Thai",
-    31: "Bengali",
-    32: "Persian",
-    33: "Telugu",
-    34: "Filipino",
-    35: "Malayalam",
-    36: "Sinhala",
-    37: "Slovak",
-    38: "Croatian",
-    39: "Serbian",
-    40: "Bulgarian",
-    41: "Lithuanian",
-    42: "Latvian",
-    43: "Estonian",
-    44: "Slovenian",
-    45: "Kannada",
-    46: "Azerbaijani",
-    47: "Urd",
-    48: "Amharic",
-    49: "Yoruba",
-    50: "Swahili",
-}
+SILENCE_DURATION_MS = 500  # Duração do silêncio em milissegundos
+SAMPLE_RATE = 16000  # Taxa de amostragem do áudio, ajuste conforme necessário
 
 # Translate ggml log levels to loguru levels
 _log_at_level = {2: logger.error, 3: logger.warning, 4: logger.info, 5: logger.debug}
@@ -79,12 +26,17 @@ class ASR:
             detect_language=True,  # Ativar detecção automática de linguagem
         )
 
-    def transcribe(self, audio: np.ndarray) -> str:
-        """Transcribe audio using the given parameters.
+    def _add_silence(self, audio: np.ndarray) -> np.ndarray:
+        """Adiciona silêncio ao início e ao final do áudio."""
+        silence_samples = int((SILENCE_DURATION_MS / 1000) * SAMPLE_RATE)  # Converte ms para amostras
+        silence = np.zeros(silence_samples, dtype=audio.dtype)  # Cria o array de silêncio
 
-        Any is whisper_cpp.WhisperParams, but we can't import that here
-        because it's a C++ class.
-        """
+        # Adiciona silêncio ao início e ao final
+        padded_audio = np.concatenate((silence, audio, silence))
+        return padded_audio
+
+    def transcribe(self, audio: np.ndarray) -> str:
+        """Transcribe audio using the given parameters."""
         global last_detected_language
         
         # Resetar a linguagem detectada antes de cada transcrição
@@ -94,16 +46,15 @@ class ASR:
         audio_length = len(audio)
         logger.info(f"Comprimento do áudio: {audio_length} amostras")
 
+        # Adiciona silêncio ao áudio
+        audio = self._add_silence(audio)
+
+        # Verifique o novo comprimento do áudio
+        audio_length = len(audio)
+        logger.info(f"Comprimento do áudio após adicionar silêncio: {audio_length} amostras")
+
         # Detectar linguagem automaticamente
         whisper_cpp_audio = audio.ctypes.data_as(ctypes.POINTER(ctypes.c_float))
-        lang_id = whisper_cpp_wrapper.whisper_lang_auto_detect(self.ctx, audio_length, 0, whisper_cpp_audio)
-
-        if lang_id >= 0:
-            # Usar mapeamento manual para converter lang_id em string
-            last_detected_language = LANG_ID_TO_STRING.get(lang_id, "Unknown")
-            logger.info(f"Linguagem detectada: {last_detected_language}")
-        else:
-            logger.warning("Falha na detecção automática de linguagem.")
         
         # Transcrição do áudio
         result = whisper_cpp_wrapper.whisper_full(self.ctx, self.params, whisper_cpp_audio, audio_length)
