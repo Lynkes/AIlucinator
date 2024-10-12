@@ -2,15 +2,13 @@ import os
 import shutil
 import logging
 import json
-from langchain_community.embeddings.ollama import OllamaEmbeddings
-from langchain_community.embeddings.bedrock import BedrockEmbeddings
-from langchain_community.embeddings.huggingface import HuggingFaceEmbeddings
+from ollama import AsyncClient, Client
 from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.schema.document import Document
 from tqdm import tqdm
 from langchain_chroma import Chroma
-
+from langchain_ollama import OllamaEmbeddings
 logging.basicConfig(level=logging.INFO)
 
 def initialize_db(save_folderpath: str, embedding_service: str = "ollama") -> Chroma:
@@ -18,7 +16,7 @@ def initialize_db(save_folderpath: str, embedding_service: str = "ollama") -> Ch
     Initializes the Chroma database with the provided embedding service.
     """
     logging.info("Initializing the Chroma database")
-    embedding_function = get_embedding_function(embedding_service)
+    embedding_function=get_embedding_function(embedding_service=embedding_service)
     chromaDB_path = os.path.join(save_folderpath, "chroma")
     db = Chroma(persist_directory=chromaDB_path, embedding_function=embedding_function)
     update_db(data_path=save_folderpath, embedding_function=embedding_function, reset=False)
@@ -28,15 +26,10 @@ def get_embedding_function(embedding_service: str):
     """
     Get the appropriate embedding function based on the selected service.
     """
-    if embedding_service == "huggingface":
-        model_name = "sentence-transformers/all-mpnet-base-v2"
-        model_kwargs = {'device': 'cuda'}
-        encode_kwargs = {'normalize_embeddings': False}
-        return HuggingFaceEmbeddings(model_name=model_name, model_kwargs=model_kwargs, encode_kwargs=encode_kwargs)
-    elif embedding_service == "ollama":
-        return OllamaEmbeddings(model="llama3.2:3b-instruct-q8_0 ")
+    if embedding_service == "ollama":
+        return OllamaEmbeddings(model="llama3.2:3b-instruct-q8_0",base_url="127.0.0.1")
     elif embedding_service == "bedrock":
-        return BedrockEmbeddings(credentials_profile_name="default", region_name="us-east-1")
+        return None (credentials_profile_name="default", region_name="us-east-1")
     else:
         logging.error(f"Unsupported embedding service: {embedding_service}")
         return None
@@ -196,5 +189,7 @@ def clear_database(chromaDB_path: str):
         logging.info(f"Database cleared at: {chromaDB_path}")
 
 if __name__ == "__main__":
-    embedding_function = get_embedding_function("ollama")
-    update_db(data_path="conversations/GLaDOS", embedding_function=embedding_function, reset=False)
+    #embedding_function = get_embedding_function("ollama")
+    client=Client(host="127.0.0.1")
+    embedding_function=get_embedding_function("ollama")
+    update_db(data_path="conversations/GLaDOS", embedding_function=embedding_function, reset=True)

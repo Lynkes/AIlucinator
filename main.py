@@ -1,9 +1,8 @@
-import os, torch, sys
+import os, sys, globals
 from dotenv import load_dotenv
 from modules.utils.env_checker import check_env
 from modules.kokoro import Kokoro
 from modules import queues
-import globals
 
 globals.processing = True
 globals.currently_speaking = False
@@ -53,7 +52,7 @@ if __name__ == "__main__":
     TTS = os.environ['TTS']
     # FASTERWISPER VARIABLES
     MODEL_SIZE = os.environ['MODEL_SIZE']
-    MODEL_DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+    MODEL_DEVICE = "cuda"
     MODEL_COMPUTE_TYPE = "float16" if MODEL_DEVICE == "cuda" else "int8"
     CHARACTER = PERSONALITY
     # DATABASE VARIABLES
