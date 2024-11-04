@@ -27,7 +27,7 @@ class TTSBase:
     """
 
     @staticmethod
-    def get_tts_provider(provider_name):
+    def get_tts_provider(provider_name, model_path):
         """
         Método estático que retorna uma instância do provedor de TTS com base no nome fornecido.
 
@@ -49,14 +49,16 @@ class TTSBase:
         elif provider_name == 'pipertts':
             from .pipertts import PiperTTS
             piper_exe_path = 'python-embedded\\piper\\piper.exe'  # Caminho para o executável do Piper
-            model_path = 'models\\glados.onnx'  # Caminho para o arquivo do modelo
             return PiperTTS(piper_exe_path, model_path)
         elif provider_name == 'mspyttsx3':
             from .mspyttsx3 import Pyttsx3TTS
             return Pyttsx3TTS()
         elif provider_name == 'onnxruntimetts':
             from .onnxruntimetts import OnnxTTS
-            return OnnxTTS(model_path='models\\glados.onnx', use_cuda=False, speaker_id=0)
+            return OnnxTTS(model_path=model_path, use_cuda=False, speaker_id=0)
+        elif provider_name == 'F5TTS':
+            from .F5TTS import F5TTS
+            return F5TTS(model_type="F5-TTS", device=None)
         else:
             raise ValueError(f"Unknown TTS provider: {provider_name}")
 
