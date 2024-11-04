@@ -1,0 +1,104 @@
+{
+    "mappings": [
+        {
+            "action": "open",
+            "name": "Notepad",
+            "path": "C:\\Windows\\System32\\notepad.exe"
+        },
+        {
+            "action": "open",
+            "name": "Calculator",
+            "path": "C:\\Windows\\System32\\calc.exe"
+        },
+        {
+            "action": "open",
+            "name": "Paint",
+            "path": "C:\\Windows\\System32\\mspaint.exe"
+        },
+        {
+            "action": "open",
+            "name": "Command Prompt",
+            "path": "C:\\Windows\\System32\\cmd.exe"
+        },
+        {
+            "action": "open",
+            "name": "File Explorer",
+            "path": "C:\\Windows\\explorer.exe"
+        },
+        {
+            "action": "open",
+            "name": "Task Manager",
+            "path": "C:\\Windows\\System32\\Taskmgr.exe"
+        },
+        {
+            "action": "open",
+            "name": "Windows PowerShell",
+            "path": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+        },
+        {
+            "action": "open",
+            "name": "Registry Editor",
+            "path": "C:\\Windows\\regedit.exe"
+        },
+        {
+            "action": "open",
+            "name": "Control Panel",
+            "path": "C:\\Windows\\System32\\control.exe"
+        },
+        {
+            "action": "open",
+            "name": "Event Viewer",
+            "path": "C:\\Windows\\System32\\eventvwr.exe"
+        },
+        {
+            "action": "open",
+            "name": "Snipping Tool",
+            "path": "C:\\Windows\\System32\\SnippingTool.exe"
+        },
+        {
+            "action": "open",
+            "name": "Disk Management",
+            "path": "C:\\Windows\\System32\\diskmgmt.msc"
+        },
+        {
+            "action": "open",
+            "name": "Device Manager",
+            "path": "C:\\Windows\\System32\\devmgmt.msc"
+        },
+        {
+            "action": "open",
+            "name": "System Information",
+            "path": "C:\\Windows\\System32\\msinfo32.exe"
+        },
+        {
+            "action": "open",
+            "name": "Character Map",
+            "path": "C:\\Windows\\System32\\charmap.exe"
+        },
+        {
+            "action": "open",
+            "name": "Windows Media Player",
+            "path": "C:\\Program Files\\Windows Media Player\\wmplayer.exe"
+        },
+        {
+            "action": "open",
+            "name": "WordPad",
+            "path": "C:\\Program Files\\Windows NT\\Accessories\\wordpad.exe"
+        },
+        {
+            "action": "open",
+            "name": "Internet Explorer",
+            "path": "C:\\Program Files\\Internet Explorer\\iexplore.exe"
+        },
+        {
+            "action": "open",
+            "name": "Microsoft Edge",
+            "path": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"
+        },
+        {
+            "action": "open",
+            "name": "Remote Desktop Connection",
+            "path": "C:\\Windows\\System32\\mstsc.exe"
+        }
+    ]
+}
