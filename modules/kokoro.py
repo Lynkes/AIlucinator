@@ -34,7 +34,7 @@ class Kokoro:
                  llm='ollama', 
                  tts='vits2', 
                  stt='whisper', 
-                 model_params={}, 
+                 tts_model='glados.onnx', 
                  LLMMODEL="gpt-3.5-turbo", 
                  model_size="large-v2", 
                  model_device="cuda",
@@ -59,7 +59,7 @@ class Kokoro:
         self.save_folderpath = save_folderpath
         self.model = LLMMODEL
         self.llm_provider = LLMBase.get_llm_provider(llm, host)
-        self.tts_provider = TTSBase.get_tts_provider(tts)
+        self.tts_provider = TTSBase.get_tts_provider(tts, tts_model)
         self.stt_provider = STTBase.get_stt_provider(stt, model_size, model_device, compute_type, wake_word)
         self.stt = stt
 
@@ -69,12 +69,6 @@ class Kokoro:
         self.filtered_words = load_filtered_words(self.save_folderpath + "/filtered_words.txt")
         self.keyword_map = load_keyword_map(self.save_folderpath + "/keyword_map.json")
         self.messages = [{}]
-
-    def save_conversation(self):
-        """
-        Salva o progresso da conversa atual no diretório especificado.
-        """
-        save_inprogress(self.messages, self.save_folderpath)
 
     def query_rag(self, template, username, userprompt):
         """
@@ -87,7 +81,7 @@ class Kokoro:
         Returns:
             str: Resposta gerada pelo modelo LLM.
         """
-        results = self.db.similarity_search_with_score(userprompt, k=2)
+        results = self.db.similarity_search_with_score(userprompt, k=5)
         memoryDB = "\n\n---\n\n".join([doc.page_content for doc, _score in results])
         template = ChatPromptTemplate.from_template(template)
         prompt = template.format(username=username, memoryDB=memoryDB, messages=self.messages, userprompt=userprompt)
@@ -112,6 +106,12 @@ class Kokoro:
             return temp_filename
         else:
             return audio, rate
+        
+    def save_conversation(self):
+        """
+        Salva o progresso da conversa atual no diretório especificado.
+        """
+        save_inprogress(self.messages, self.save_folderpath)
     
     def listen_for_voice(self, timeout):
         """

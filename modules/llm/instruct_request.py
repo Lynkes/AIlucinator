@@ -29,10 +29,9 @@ class INSTRUCT(LLMBase):
             add_generation_prompt=True,
         )
         
-        # Use self.client.generate instead of requests.post for streaming
+        # Use self.client.generate instead of requests.post for streaming,  options={"num_predict": 200}
         message = ''
-        stream = self.client.generate(model=model, prompt=prompt, stream=True, keep_alive=600)
-        
+        stream = self.client.generate(model=model, prompt=prompt, stream=True, keep_alive=1600)
         for chunk in stream:
             if globals.processing is False:
                 print("Break globals.processing is False")

@@ -16,10 +16,10 @@ import time
 VAD_MODEL_PATH = "silero_vad.onnx"
 SAMPLE_RATE = 16000
 VAD_SIZE = 50  # ms
-VAD_THRESHOLD = 0.2
+VAD_THRESHOLD = 0.4
 BUFFER_SIZE = 40000  # ms
 PAUSE_LIMIT = 1300  # ms
-SIMILARITY_THRESHOLD = 0.5 # Levenshtein distance threshold
+SIMILARITY_THRESHOLD = 2 # Levenshtein distance threshold
 SMOOTHING_FACTOR = 0.3  # Fator de suavização (0 a 1), menor é mais suave
 
 class VoiceRecognition:
@@ -86,8 +86,20 @@ class VoiceRecognition:
     def wakeword_detected(self, text: str) -> bool:
         if not self.wake_word:
             return False
-        closest_distance = min(distance(word.lower(), self.wake_word) for word in text.split())
-        return closest_distance < SIMILARITY_THRESHOLD
+
+        # Converta a string das wakewords em uma lista, se necessário
+        if isinstance(self.wake_word, str):
+            self.wake_word = self.wake_word.split(',')  # Separa a string em uma lista de palavras
+
+        # Encontre a menor distância entre as palavras no texto e qualquer uma das wake words
+        closest_distance = min(
+            distance(word.lower(), wake_word.lower())
+            for word in text.split()
+            for wake_word in self.wake_word
+        )
+
+        logger.warning(f"closest_distance: {closest_distance}")
+        return closest_distance <= SIMILARITY_THRESHOLD
 
     def listen_for_voice(self, timeout=None):
         self.input_stream.start()
@@ -139,7 +151,7 @@ class VoiceRecognition:
         detected_text = self.asr_model.transcribe(final_audio)
 
         if detected_text:
-            logger.success(f"ASR text: '{detected_text}'")
+            logger.info(f"Detected:'{detected_text}'")
             if self.wake_word and not self.wakeword_detected(detected_text):
                 logger.info(f"Wake word '{self.wake_word}' not detected.")
             else:

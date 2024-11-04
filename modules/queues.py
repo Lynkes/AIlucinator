@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 PAUSE_TIME = 0.05  
 
 class Queues:
-    def __init__(self, kokoro: Kokoro, your_name, personality, character, debug=False):
+    def __init__(self, kokoro: Kokoro, your_name, personality, character, debug=False, debug_time_logs=False):
         """
         Inicializa a classe Queues com múltiplas filas para processamento de voz, texto e outros eventos.
         """
@@ -35,12 +35,12 @@ class Queues:
         self.personality = personality
         self.character = character
         self.debug = debug
+        self.debug_time_logs = debug_time_logs  # Controla os logs de tempo de ciclo
 
         if self.kokoro.messages:
             self.kokoro.messages = [{}]
             logging.info("Self.kokoro.messages cleared.")
 
-        # Carrega o prompt da personalidade
         try:
             with open(f"{self.personality}.txt", "r", encoding="utf-8") as file:
                 self.prompt = file.read()
@@ -75,6 +75,7 @@ class Queues:
     def handle_personal_input(self):
         """Lida com o input textual do usuário e comandos especiais ('save', 'exit')."""
         while not self.end_received.is_set():
+            start_time = time.time()  # Marca o início do ciclo
             try:
                 personal_sentence = input(Style.BRIGHT + Fore.MAGENTA + "\nEnter your question (or 'exit' to save and stop): " + Style.BRIGHT + Fore.WHITE)
                 if personal_sentence.lower() == "save":
@@ -89,10 +90,14 @@ class Queues:
                     self.gpt_generation_queue.put(personal_sentence)
             except Exception as e:
                 logging.error(f"Error in handle_personal_input: {e}")
+            end_time = time.time()
+            if self.debug_time_logs:
+                logging.info(f"handle_personal_input - Tempo de ciclo: {end_time - start_time:.4f} segundos")
 
     def stt_recognition(self):
         """Processa a fala em texto e insere na fila de geração de GPT."""
         while not self.end_received.is_set():
+            start_time = time.time()  # Marca o início do ciclo
             try:
                 recognized_text = self.kokoro.listen_for_voice(timeout=5)
                 if recognized_text:
@@ -100,31 +105,39 @@ class Queues:
                     self.gpt_generation_queue.put(recognized_text)
             except Exception as e:
                 logging.error(f"Error in stt_recognition: {e}")
+            end_time = time.time()
+            if self.debug_time_logs:
+                logging.info(f"stt_recognition - Tempo de ciclo: {end_time - start_time:.4f} segundos")
 
     def gpt_generation(self):
         """Processa o texto reconhecido usando o modelo GPT."""
         while not self.end_received.is_set():
+            start_time = time.time()  # Marca o início do ciclo
             try:
                 detected_text = self.gpt_generation_queue.get(timeout=0.1)
                 response = self.kokoro.query_rag(template=self.prompt, username=self.your_name, userprompt=detected_text)
                 if response:
-                    self.kokoro.messages.append({'role': self.your_name, 'content': detected_text})
                     self.tts_generation_queue.put(response)
             except queue.Empty:
                 time.sleep(PAUSE_TIME)
+            end_time = time.time()
+            if self.debug_time_logs:
+                logging.info(f"gpt_generation - Tempo de ciclo: {end_time - start_time:.4f} segundos")
 
     def tts_generation(self):
         """Gera áudio a partir do texto e executa a reprodução."""
         assistant_text = []
         while not self.end_received.is_set():
+            start_time = time.time()  # Marca o início do ciclo
             try:
                 generated_text = self.tts_generation_queue.get(timeout=PAUSE_TIME)
                 if generated_text == "<EOS>":
                     finished = True
                 elif generated_text:
+                    logging.info(f"Sent to tts_generation: {generated_text}")
                     audio, rate = self.kokoro.generate_voice(generated_text)
-                    if audio and rate:
-                        sd.play(audio, rate)
+                    if audio.any() and rate:##########################
+                        #sd.play(audio, rate)
                         if globals.interrupted:
                             clipped_text = clip_interrupted_sentence(generated_text, percentage_played_audio(len(audio), rate))
                             assistant_text.append(clipped_text)
@@ -135,3 +148,6 @@ class Queues:
                     globals.interrupted = False
             except queue.Empty:
                 pass
+            end_time = time.time()
+            if self.debug_time_logs:
+                logging.info(f"tts_generation - Tempo de ciclo: {end_time - start_time:.4f} segundos")

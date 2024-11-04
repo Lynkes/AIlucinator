@@ -60,7 +60,7 @@ class STTBase:
             return GoogleSTT()
         elif provider_name == 'whisper':
             from .whisper import WhisperSTT
-            return WhisperSTT(model_size_or_path=model_size, device=device, compute_type=compute_type) 
+            return WhisperSTT(model_size_or_path=model_size, device=device, compute_type=compute_type, wake_word=wake_word) 
         elif provider_name == 'voice_recognition':
             from .voice_recognition import VoiceRecognition
             return VoiceRecognition(model_size_or_path=model_size, device=device, compute_type=compute_type, wake_word=wake_word)

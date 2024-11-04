@@ -1,0 +1,203 @@
+[
+    {
+        "type": "function",
+        "function": {
+            "name": "set_volume",
+            "description": "Set the master volume level of the audio output device.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "level": {
+                        "type": "integer",
+                        "description": "The volume level to set (0 to 100)."
+                    }
+                },
+                "required": ["level"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "increase_volume",
+            "description": "Increase the master volume level of the audio output device by a specified amount.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "amount": {
+                        "type": "integer",
+                        "description": "The amount by which to increase the volume (in percentage)."
+                    }
+                },
+                "required": ["amount"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "decrease_volume",
+            "description": "Decrease the master volume level of the audio output device by a specified amount.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "amount": {
+                        "type": "integer",
+                        "description": "The amount by which to decrease the volume (in percentage)."
+                    }
+                },
+                "required": ["amount"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "open_program",
+            "description": "Open a program located at the specified path.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "program_path": {
+                        "type": "string",
+                        "description": "The absolute path of the program to open."
+                    }
+                },
+                "required": ["program_path"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "open_folder",
+            "description": "Open a folder in the file explorer.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "path": {
+                        "type": "string",
+                        "description": "The absolute path of the folder to open."
+                    }
+                },
+                "required": ["path"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "select_folder",
+            "description": "Prompt the user to select a folder and return its path.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_flight_times",
+            "description": "Retrieve flight details such as departure, arrival, and duration for a given flight route.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "departure": {
+                        "type": "string",
+                        "description": "The departure airport code."
+                    },
+                    "arrival": {
+                        "type": "string",
+                        "description": "The arrival airport code."
+                    }
+                },
+                "required": ["departure", "arrival"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "google_search",
+            "description": "Perform a Google search and return the results.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "The search query string."
+                    },
+                    "api_key": {
+                        "type": "string",
+                        "description": "Your Google API key."
+                    },
+                    "search_engine_id": {
+                        "type": "string",
+                        "description": "Your Google Custom Search Engine ID."
+                    }
+                },
+                "required": ["query", "api_key", "search_engine_id"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "currency_converter",
+            "description": "Convert an amount from one currency to another using a fixed conversion rate.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "amount": {
+                        "type": "number",
+                        "description": "The amount of money to convert."
+                    },
+                    "from_currency": {
+                        "type": "string",
+                        "description": "The currency code of the original currency."
+                    },
+                    "to_currency": {
+                        "type": "string",
+                        "description": "The currency code of the target currency."
+                    }
+                },
+                "required": ["amount", "from_currency", "to_currency"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "set_reminder",
+            "description": "Set a reminder that will notify you after a specified duration.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "description": "The message to be displayed when the reminder goes off."
+                    },
+                    "duration_seconds": {
+                        "type": "integer",
+                        "description": "The duration in seconds after which the reminder will trigger."
+                    }
+                },
+                "required": ["message", "duration_seconds"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_joke",
+            "description": "Retrieve a random joke from an online joke API.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        }
+    }
+]
