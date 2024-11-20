@@ -42,7 +42,7 @@ O sistema é composto pelos seguintes componentes principais:
 ## Configuração do Ambiente
 1. **Recomendação de instalação:**
    [Baixar, extrair e executar o install.bat para sistemas Windows 10/11](https://github.com/Lynkes/AIlucinator/releases/download/V1.0/AIlucinatorV1.0.zip)
-3. **Clone o repositório:**
+3. **Ou clone o repositório:**
 
    ```bash
    git clone https://github.com/Lynkes/AIlucinator.git
