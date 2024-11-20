@@ -31,7 +31,7 @@ O sistema é composto pelos seguintes componentes principais:
   - Outros requisitos específicos estão listados no `requirements.txt`
 - **Dependências Adicionais**:
   - **Whisper.cpp**: [Baixar](https://github.com/ggerganov/whisper.cpp/releases/download/v1.6.0/whisper-cublas-12.2.0-bin-x64.zip)
-  - **Modelo Whisper ggml-large-v3.bin**: [Baixar](https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3.bin)
+  - **Modelo Whisper ggml-large-v3.bin**: [Baixar](https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3.bin) Ou [Outros Modelos](https://huggingface.co/ggerganov/whisper.cpp) Altere MODEL_SIZE na .env de acordo com o modelo
   - **Ollama**: [Baixar](https://ollama.com/download/OllamaSetup.exe)
     - Após a instalação, execute os comandos:
       ```bash
@@ -40,29 +40,30 @@ O sistema é composto pelos seguintes componentes principais:
       ```
 
 ## Configuração do Ambiente
-
-1. **Clone o repositório:**
+1. **Recomendação de instalação:**
+   [Baixar, extrair e executar o install.bat para sistemas Windows 10/11](https://github.com/Lynkes/AIlucinator/releases/download/V0.2/Allucinator-V0.2.7z)
+3. **Clone o repositório:**
 
    ```bash
    git clone https://github.com/Lynkes/AIlucinator.git
    cd AIlucinator
    ```
 
-2. **Crie e ative um ambiente virtual (opcional, mas recomendado):**
+4. **Crie e ative um ambiente virtual (opcional, mas recomendado):**
 
    ```bash
    python -m venv venv
    source venv/bin/activate  # No Windows: venv\Scripts\activate
    ```
 
-3. **Instale as dependências:**
+5. **Instale as dependências:**
 
    ```bash
    pip install -r requirements.txt
    pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
    ```
 
-4. **Crie um arquivo `.env` com as variáveis de ambiente necessárias:**
+6. **Crie um arquivo `.env` com as variáveis de ambiente necessárias:**
 
    ```env
    # Configuração da API do OpenAI
