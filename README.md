@@ -24,7 +24,7 @@ O sistema é composto pelos seguintes componentes principais:
 
 ## Requisitos
 
-- **Python 3.7** ou superior
+- **Python 3.10** ou superior
 - **Bibliotecas Python**:
   - `torch`
   - `python-dotenv`
