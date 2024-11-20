@@ -57,59 +57,69 @@ O sistema é composto pelos seguintes componentes principais:
 
    ```env
       # Configuração da API do OpenAI
-      OPENAI_API_KEY=  
+      OPENAI_API_KEY=
       # Coloque sua chave da API OpenAI aqui, se aplicável
       
       # Provedor de Modelos de Linguagem (LLM)
-      LLM=INSTRUCT  
-      # Escolha entre ollama, openai
+      # Host para Ollama utilizando INSTRUCT e AgentINSTRUCT
+      HOST=127.0.0.1
+      
+      # Escolha entre ollama, openai, INSTRUCT, AgentINSTRUCT
+      LLM=AgentINSTRUCT
       
       # Provedor de Reconhecimento de Fala (STT)
-      STT=voice_recognition_Fwhisper 
-      # Escolha entre whisper, google, voice_recognition, voice_recognition_Fwhisper
+      # Escolha entre whisper, google, voice_recognition, voice_recognition_Fwhisper, ars_vad_wcpp
+      STT=ars_vad_wcpp
       
       # Provedor de Síntese de Fala (TTS)
-      TTS=onnxruntimetts  
-      # Escolha entre mspyttsx3, vits2, pipertts
+      # Escolha entre mspyttsx3, vits2, pipertts, onnxruntimetts, F5TTS
+      TTS=F5TTS
       
       # Modelo de LLM
-      LLMMODEL=llama3.2:3b-instruct-q8_0  
       # Escolha entre llama3.1, gpt-3.5-turbo, llava-llama3, llama3.2:3b-instruct-q8_0
+      LLMMODEL=llama3.2
       
-      # Tamanho do Modelo
-      MODEL_SIZE=large-v3  
+      # Modelo de STT para Whisper, FasterWhisper ou Whispercpp
       # Escolha entre large-v2, large-v1, medium, medium.en, small, small.en, base, base.en, tiny, tiny.en, distil-large-v3
+      MODEL_SIZE=ggml-large-v3.bin
       
       # Serviço de Embeddings
-      EMBEDDING_SERVICE=ollama 
       # Escolha entre huggingface, ollama, openai
+      EMBEDDING_SERVICE=ollama
       
-      # Nome da Personalidade do Chatbot
-      PERSONALITY=GLaDOS  
+      # Nome da Personalidade do Chatbot e seu diretório
+      PERSONALITY=Ryan
+      
+      # Modelo de TTS para pipertts ou onnxruntimetts (ex.: glados.onnx, en_US-ryan-high.onnx, pt_BR-faber-medium.onnx)
+      TTS_MODEL=pt_BR-faber-medium.onnx
+      
+      # Palavras usadas para ativar o personagem
+      WAKE_WORD=Ryan
       
       # Nome do Usuário (opcional)
-      YOUR_NAME=  
-      # Coloque seu nome ou o nome do usuário, se necessário
+      YOUR_NAME=
+      
+      # Chaves de API
+      GOOGLE_API_KEY=""
+      YOUR_SEARCH_ENGINE_ID=""
+      OPENWEATHERMAP_API_KEY=""
       
       # Configuração do Modo Debug
-      DEBUG=False  
       # Defina como True para ativar o modo debug
+      DEBUG=False
       
-      # Caminhos para Arquivos de Conversa, Modelos de Voz e Dados
-      # Esses são apenas comentários para referência e não são variáveis de ambiente reais
-      #conversations\GLaDOS\GLaDOS.txt
-      #conversations\GLaDOS\*.json Arquivos json serão carregados para o banco de dados como se fossem o historico de mensagem quando o limite de 8000 tokens é estourado ou se a conversa é salva e o codigo parado
-      #conversations\GLaDOS\PDF\*.PDF Todos PDFs nessa pasta tambem serão carregados ao banco de dados como se fossem memoria,
-      #conversations\GLaDOS\chroma
-      #conversations\GLaDOS\model\voices
-      #conversations\GLaDOS\model\Models_Style-Bert_VITS2_Portal_GLaDOS_v1_config.json
-      #conversations\GLaDOS\model\Portal_GLaDOS_v1_e782_s50000.safetensors
-      #conversations\GLaDOS\model\style_vectors.npy
-      #conversations\GLaDOS\pipermodel\glados.onnx
-      #conversations\GLaDOS\pipermodel\glados.onnx.json
-      #conversations\GLaDOS\pipermodel\silero_vad.onnx
-
-
+      # Caminhos para Arquivos de Conversa, Modelos de Voz e Dados (apenas para referência)
+      # conversations\GLaDOS\GLaDOS.txt
+      # conversations\GLaDOS\*.json - Arquivos JSON serão carregados para o banco de dados como histórico de mensagens
+      # conversations\GLaDOS\PDF\*.PDF - Todos os PDFs nessa pasta também serão carregados como memória
+      # conversations\GLaDOS\chroma
+      # conversations\GLaDOS\model\voices
+      # conversations\GLaDOS\model\Models_Style-Bert_VITS2_Portal_GLaDOS_v1_config.json
+      # conversations\GLaDOS\model\Portal_GLaDOS_v1_e782_s50000.safetensors
+      # conversations\GLaDOS\model\style_vectors.npy
+      # conversations\GLaDOS\pipermodel\glados.onnx
+      # conversations\GLaDOS\pipermodel\glados.onnx.json
+      # conversations\GLaDOS\pipermodel\silero_vad.onnx
    ```
 
 ## Estrutura do Projeto
