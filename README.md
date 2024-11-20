@@ -110,7 +110,6 @@ O sistema é composto pelos seguintes componentes principais:
       
       # Caminhos para Arquivos de Conversa, Modelos de Voz e Dados (apenas para referência)
       # conversations\GLaDOS\GLaDOS.txt
-      # conversations\GLaDOS\*.json - Arquivos JSON serão carregados para o banco de dados como histórico de mensagens
       # conversations\GLaDOS\PDF\*.PDF - Todos os PDFs nessa pasta também serão carregados como memória
       # conversations\GLaDOS\chroma
       # conversations\GLaDOS\model\voices
