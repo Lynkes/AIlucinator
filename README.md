@@ -23,7 +23,7 @@ O sistema é composto pelos seguintes componentes principais:
 - **Banco de Dados Vetorial**: Utiliza a técnica RAG (Retrieval-Augmented Generation) para LLMs, armazenando e consultando informações relevantes.
 
 ## Requisitos
-
+- **Placa de video Nvidea** 8GB de VRAM no minimo, Recomendado 12GB de VRAM ou Mais.
 - **Python 3.10** ou superior
 - **Bibliotecas Python**:
   - `torch`
