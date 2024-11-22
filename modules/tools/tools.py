@@ -13,9 +13,9 @@ import time
 import threading
 from ollama import AsyncClient
 # Defina suas chaves de API
-GOOGLE_API_KEY = "AIzaSyCTor3nBYT8XOiDWP50QvO-Wg97kJMvWeE"
-YOUR_SEARCH_ENGINE_ID = "55b89c7350afa4dde"
-OPENWEATHERMAP_API_KEY = "30e7a1aeb70171f1714b7892b779bc67"
+GOOGLE_API_KEY = ""
+YOUR_SEARCH_ENGINE_ID = ""
+OPENWEATHERMAP_API_KEY = ""
 
 
 
