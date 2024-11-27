@@ -10,7 +10,7 @@ def check_env():
     elif sys.base_prefix != sys.prefix:
         checkenvfile()
         print(Style.BRIGHT + Fore.BLUE + 'You are in a virtual environment:', sys.prefix)
-    elif os.path.exists("python-embeded"):
+    elif os.path.exists("python-embedded"):
         checkenvfile()
         print(Style.BRIGHT + Fore.BLUE + 'You are in an embedded environment:', sys.prefix)
     else:
