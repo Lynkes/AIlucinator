@@ -6,7 +6,7 @@ import random
 import string
 from tqdm import tqdm
 from collections import defaultdict
-
+from importlib.resources import files
 import matplotlib
 
 matplotlib.use("Agg")
@@ -121,9 +121,8 @@ def get_tokenizer(dataset_name, tokenizer: str = "pinyin"):
                 - if use "byte", set to 256 (unicode byte range)
     """
     if tokenizer in ["pinyin", "char"]:
-        #relative_path = os.path.relpath("F5/data/{dataset_name}_{tokenizer}/vocab.txt")
-        vocab_path = os.path.abspath(f"modules/tts/F5/data/{dataset_name}_{tokenizer}/vocab.txt")
-        with open(vocab_path, "r", encoding="utf-8") as f:
+        tokenizer_path = os.path.abspath(f"modules/tts/F5/data/{dataset_name}_{tokenizer}/vocab.txt")
+        with open(tokenizer_path, "r", encoding="utf-8") as f:
             vocab_char_map = {}
             for i, char in enumerate(f):
                 vocab_char_map[char[:-1]] = i
@@ -133,14 +132,17 @@ def get_tokenizer(dataset_name, tokenizer: str = "pinyin"):
     elif tokenizer == "byte":
         vocab_char_map = None
         vocab_size = 256
+
     elif tokenizer == "custom":
-        with open(dataset_name, "r", encoding="utf-8") as f:
+        tokenizer_path = os.path.abspath(f"modules/tts/F5/data/{dataset_name}/vocab.txt")
+        with open(tokenizer_path, "r", encoding="utf-8") as f:
             vocab_char_map = {}
             for i, char in enumerate(f):
                 vocab_char_map[char[:-1]] = i
         vocab_size = len(vocab_char_map)
 
     return vocab_char_map, vocab_size
+
 
 
 # convert char to pinyin
