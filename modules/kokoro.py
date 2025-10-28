@@ -105,22 +105,93 @@ class Kokoro:
     
     async def chat_query_rag(self, template, username, userprompt):
         """
-        Realiza uma consulta RAG (Retrieval-Augmented Generation) de forma assíncrona usando um prompt fornecido.
-
-        Args:
-            template (str): Template do prompt.
-            userprompt (str): Entrada do usuário para a consulta.
-
-        Returns:
-            str: Resposta gerada pelo modelo LLM.
+        Realiza uma consulta RAG (Retrieval-Augmented Generation) de forma assíncrona,
+        usando embeddings e busca vetorial 100% local (offline) com truncamento automático
+        de contexto baseado no limite de 8192 tokens.
         """
-        results = self.db.similarity_search_with_score(userprompt, k=5)
-        memoryDB = "\n\n---\n\n".join([doc.page_content for doc, _score in results])
+
+        import numpy as np
+        from sentence_transformers import SentenceTransformer
+        from qdrant_client import QdrantClient
+        from qdrant_client.models import PointStruct, Distance, VectorParams
+        import tiktoken
+
+        # === 1. Inicialização do modelo local de embeddings ===
+        # Mantém o modelo carregado em cache na instância (evita recarregar a cada chamada)
+        if not hasattr(self, "embedder"):
+            print("[Kokoro] 🔤 Carregando modelo de embeddings local (BGE-PT)...")
+            self.embedder = SentenceTransformer("BAAI/bge-base-pt-v1.5")
+
+        # === 2. Inicialização do Qdrant local ===
+        if not hasattr(self, "vector_client"):
+            print("[Kokoro] 🧠 Inicializando Qdrant local...")
+            self.vector_client = QdrantClient("localhost", port=6333)
+            # Cria a coleção, se não existir
+            try:
+                self.vector_client.get_collection("memoria_local")
+            except Exception:
+                self.vector_client.recreate_collection(
+                    collection_name="memoria_local",
+                    vectors_config=VectorParams(size=768, distance=Distance.COSINE),
+                )
+
+        # === 3. Inserir nova memória no Qdrant ===
+        emb_user = self.embedder.encode([userprompt])[0].tolist()
+        self.vector_client.upsert(
+            collection_name="memoria_local",
+            points=[
+                PointStruct(
+                    id=int(np.random.randint(1e9)),
+                    vector=emb_user,
+                    payload={
+                        "texto": userprompt,
+                        "username": username
+                    }
+                )
+            ]
+        )
+
+        # === 4. Recuperar memórias semelhantes ===
+        results = self.vector_client.search(
+            collection_name="memoria_local",
+            query_vector=emb_user,
+            limit=5
+        )
+
+        memoryDB = "\n\n---\n\n".join([r.payload["texto"] for r in results])
+
+        # === 5. Montar prompt com truncamento automático ===
         template = ChatPromptTemplate.from_template(template)
-        prompt = template.format(username=username, memoryDB=memoryDB, messages=self.messages, userprompt=userprompt)
-        self.memory_sise(prompt)
+        prompt = template.format(
+            username=username,
+            memoryDB=memoryDB,
+            messages=self.messages,
+            userprompt=userprompt
+        )
+
+        # === 6. Verifica e limita o tamanho do contexto ===
+        encoding = tiktoken.encoding_for_model("gpt-4")
+        tokens = encoding.encode(prompt)
+        if len(tokens) > 8192:
+            print("[Kokoro] ⚠️ Contexto excedeu 8192 tokens, truncando memória...")
+            # Remove os trechos mais antigos até caber
+            while len(tokens) > 8192:
+                # corta o primeiro bloco de memória
+                memoryDB = "\n\n---\n\n".join(
+                    [r.payload["texto"] for r in results[1:]]
+                )
+                prompt = template.format(
+                    username=username,
+                    memoryDB=memoryDB,
+                    messages=self.messages,
+                    userprompt=userprompt
+                )
+                tokens = encoding.encode(prompt)
+
+        # === 7. Gera resposta usando o LLM local/selecionado ===
         response = self.llm_provider.chat(prompt, self.model)
         return await response
+
         
 
     def generate_voice(self, sentence, temp_filename: str | None = None):
