@@ -62,6 +62,9 @@ class LLMBase:
         elif provider_name == 'INSTRUCT':
             from .instruct_request import INSTRUCT
             return INSTRUCT(host=host)
+        elif provider_name == 'KOBOLD_INSTRUCT':
+            from .kobold_instruct import KOBOLD_INSTRUCT
+            return KOBOLD_INSTRUCT(host=host)
         elif provider_name == 'AgentINSTRUCT':
             from .instruct_agent import AgentINSTRUCT
             return AgentINSTRUCT(host=host, save_folderpath=save_folderpath, GOOGLE_API_KEY=GOOGLE_API_KEY, YOUR_SEARCH_ENGINE_ID=YOUR_SEARCH_ENGINE_ID, OPENWEATHERMAP_API_KEY=OPENWEATHERMAP_API_KEY,)

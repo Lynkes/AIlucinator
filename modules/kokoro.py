@@ -3,10 +3,15 @@ from modules.tts.tts_base import TTSBase
 from modules.stt.stt_base import STTBase
 from modules.utils.db_utils import initialize_db, update_db
 from modules.utils.conversation_utils import load_filtered_words, load_keyword_map, save_inprogress, filter_paragraph
-from langchain.prompts import ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate
 from colorama import *
 import tiktoken
 import globals
+import numpy as np
+from sentence_transformers import SentenceTransformer
+from qdrant_client import QdrantClient
+from qdrant_client.models import PointStruct, Distance, VectorParams
+import tiktoken
 
 class Kokoro:
     """
@@ -65,7 +70,7 @@ class Kokoro:
         self.stt = stt
 
         # Inicializa o banco de dados
-        self.db = initialize_db(model=llm, host=host, save_folderpath=self.save_folderpath)
+        self.db = initialize_db(self.save_folderpath)
         # Carrega filtros
         self.filtered_words = load_filtered_words(self.save_folderpath + "/filtered_words.txt")
         self.keyword_map = load_keyword_map(self.save_folderpath + "/keyword_map.json")
@@ -110,11 +115,7 @@ class Kokoro:
         de contexto baseado no limite de 8192 tokens.
         """
 
-        import numpy as np
-        from sentence_transformers import SentenceTransformer
-        from qdrant_client import QdrantClient
-        from qdrant_client.models import PointStruct, Distance, VectorParams
-        import tiktoken
+        
 
         # === 1. Inicialização do modelo local de embeddings ===
         # Mantém o modelo carregado em cache na instância (evita recarregar a cada chamada)

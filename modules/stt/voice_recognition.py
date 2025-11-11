@@ -67,8 +67,8 @@ class VoiceRecognition:
 
         # Inicialização dos modelos
         self.vad_model = VAD(model_path=str(Path.cwd() / "models" / VAD_MODEL_PATH))
-        self.asr_model = ASR(model=str(Path.cwd() / "models" / model_size_or_path))
-
+        self.asr_model = ASR(model=str(Path.cwd() / "models" / model_size_or_path),whisper_cli_path=str(Path.cwd() / "submodules/whisper.cpp/whisper-cli.exe"))
+        #self.asr_model = ASR(model_path=str(Path.cwd() / "models" / model_size_or_path),whisper_cli_path=str(Path.cwd() / "submodules/whisper.cpp/whisper-cli.exe"))
     def audio_callback(self, indata: np.ndarray, frames: int, time_info: Any, status: CallbackFlags):
         """
         Callback de áudio utilizado para processar áudio em tempo real.

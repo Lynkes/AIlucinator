@@ -37,6 +37,7 @@ site/
 models/
 submodules/
 conversations/GLaDOS/chroma/
+qdrant_storage/
 *.onnx
 *.bin
 
